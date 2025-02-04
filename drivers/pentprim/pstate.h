@@ -235,17 +235,18 @@ typedef struct br_primitive_state {
 		/*
 		 * Ranges for components
 		 */
-		br_scalar comp_offsets[NUM_COMPONENTS] __attribute__((aligned(4)));
-		br_scalar comp_scales[NUM_COMPONENTS] __attribute__((aligned(4)));
+		br_scalar comp_offsets[NUM_COMPONENTS];
+		br_scalar comp_scales[NUM_COMPONENTS];
+
 		/*
 		 * Copies of timestamps for output and prim. states that
 		 * block & ranges are based on
 		 */
-		br_uint_32 timestamp_prim __attribute__((aligned(4)));
-		br_uint_32 timestamp_out __attribute__((aligned(4)));
-	} cache __attribute__((aligned(4)));
+		br_uint_32 timestamp_prim;
+		br_uint_32 timestamp_out;
+	} cache;
 
-} br_primitive_state __attribute__((aligned(4)));
+} br_primitive_state;
 
 #ifdef __cplusplus
 };

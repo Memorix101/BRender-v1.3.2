@@ -14,7 +14,7 @@
 #include "brassert.h"
 
 #include "vecifns.h"
-#include <stdio.h>
+
 #include "timing.h"
 
 BR_RCS_ID("$Id: v1model.c 1.8 1998/07/21 11:35:57 jon Exp $");
@@ -476,7 +476,6 @@ static void GEOMETRY_CALL V1Face_Render(struct br_geometry *self, struct br_rend
 }
 #endif
 
-#include <stdio.h>
 #ifndef V1Face_OS_Render
 void GEOMETRY_CALL V1Face_OS_Render(struct br_geometry *self, struct br_renderer *renderer)
 {
@@ -963,10 +962,8 @@ static br_error V1Model_Render
 		 * Invoke the current set of renderer functions on the group
 		 */
 		if(on_screen) {
-			for(i=0; i < renderer->state.cache.ngeometry_fns_onscreen; i++){
-				// printf("Calling: renderer->state.cache.ngeometry_fns_onscreen[%d]\n",i);
+			for(i=0; i < renderer->state.cache.ngeometry_fns_onscreen; i++)
 				renderer->state.cache.geometry_fns_onscreen[i](self,renderer);
-			}
 		} else {
 			for(i=0; i < renderer->state.cache.ngeometry_fns; i++)
 				renderer->state.cache.geometry_fns[i](self,renderer);

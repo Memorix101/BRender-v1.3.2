@@ -17,7 +17,7 @@
  */
 typedef int64_t  br_int_64;
 typedef uint64_t br_uint_64;
-typedef int32_t  br_int_32 __attribute__((aligned(4)));;
+typedef int32_t  br_int_32;
 typedef uint32_t br_uint_32;
 typedef int16_t  br_int_16;
 typedef uint16_t br_uint_16;
@@ -114,12 +114,8 @@ typedef float br_float;
  */
 #pragma off (unreferenced);
 
-#ifndef BR_ENDIAN_BIG
 #define BR_ENDIAN_BIG		0
-#endif
-#ifndef BR_ENDIAN_LITTLE
 #define BR_ENDIAN_LITTLE	1
-#endif
 
 #ifndef __H2INC__
 #pragma pack(4);
@@ -164,12 +160,8 @@ typedef float br_float;
 
 #define BR_HAS_FAR	0
 
-#ifndef BR_ENDIAN_BIG
 #define BR_ENDIAN_BIG		0
-#endif
-#ifndef BR_ENDIAN_LITTLE
 #define BR_ENDIAN_LITTLE	1
-#endif
 
 #ifndef __H2INC__
 #pragma warning(disable:4103)
@@ -216,12 +208,8 @@ typedef float br_float;
 
 #define BR_HAS_FAR	0
 
-#ifndef BR_ENDIAN_BIG
 #define BR_ENDIAN_BIG		0
-#endif
-#ifndef BR_ENDIAN_LITTLE
 #define BR_ENDIAN_LITTLE	1
-#endif
 
 #ifndef __H2INC__
 #pragma option -a4
@@ -267,12 +255,8 @@ typedef float br_float;
 
 #define BR_HAS_FAR	0
 
-#ifndef BR_ENDIAN_BIG
 #define BR_ENDIAN_BIG		0
-#endif
-#ifndef BR_ENDIAN_LITTLE
 #define BR_ENDIAN_LITTLE	1
-#endif
 
 /*
  * IBM CSet++
@@ -313,12 +297,8 @@ typedef float br_float;
 
 #define BR_HAS_FAR	0
 
-#ifndef BR_ENDIAN_BIG
 #define BR_ENDIAN_BIG		0
-#endif
-#ifndef BR_ENDIAN_LITTLE
 #define BR_ENDIAN_LITTLE	1
-#endif
 
 /*
  * Intel reference compiler
@@ -362,12 +342,8 @@ typedef float br_float;
 
 #define BR_HAS_FAR	0
 
-#ifndef BR_ENDIAN_BIG
 #define BR_ENDIAN_BIG		0
-#endif
-#ifndef BR_ENDIAN_LITTLE
 #define BR_ENDIAN_LITTLE	1
-#endif
 
 #endif
 
@@ -458,7 +434,7 @@ typedef float br_float;
  * Reference methods in C
  */
 
-#define BR_CMETHOD(t, m) (_M_##t##_##m)
+#define BR_CMETHOD(t,m)					(_M_##t##_##m)
 #define BR_CMETHOD_REF(t,m) 		((void *)_M_##t##_##m)
 #define BR_CMETHOD_CALL(t,m,o) 		(((t *)(o))->dispatch->_##m)
 

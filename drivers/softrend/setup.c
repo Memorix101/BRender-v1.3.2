@@ -13,7 +13,7 @@
 #include "brassert.h"
 
 #include "vecifns.h"
-#include <stdio.h>
+
 BR_RCS_ID("$Id: setup.c 1.9 1998/11/13 16:23:37 jon Exp $");
 
 #define COUNTERS 0
@@ -165,7 +165,6 @@ br_error CacheUpdate(br_renderer *self)
 #if COUNTERS
 	CounterCache++;
 #endif
-    // printf("Calling: CacheUpdate\n");
 
 	/*
 	 * Fast exit if nothing has changed
@@ -1049,25 +1048,17 @@ void GeometryFunctionReset(br_renderer *renderer)
 	renderer->state.cache.ngeometry_fns_onscreen = 0;
 }
 
-void GeometryFunctionAdd(br_renderer *renderer, geometry_fn *fn) {
-    ASSERT(renderer->state.cache.ngeometry_fns < BR_ASIZE(renderer->state.cache.geometry_fns));
-    renderer->state.cache.geometry_fns[renderer->state.cache.ngeometry_fns++] = fn;
-    
-    // Log the addition
-    // printf("Added geometry function to cache (index %d): %p\n",
-    //        renderer->state.cache.ngeometry_fns - 1, (void *)fn);
+void GeometryFunctionAdd(br_renderer *renderer, geometry_fn *fn)
+{
+	ASSERT(renderer->state.cache.ngeometry_fns < BR_ASIZE(renderer->state.cache.geometry_fns));
+	renderer->state.cache.geometry_fns[renderer->state.cache.ngeometry_fns++] = fn;
 }
 
-
-void GeometryFunctionOnScreenAdd(br_renderer *renderer, geometry_fn *fn) {
-    ASSERT(renderer->state.cache.ngeometry_fns_onscreen < BR_ASIZE(renderer->state.cache.geometry_fns_onscreen));
-    renderer->state.cache.geometry_fns_onscreen[renderer->state.cache.ngeometry_fns_onscreen++] = fn;
-    
-    // Log the addition
-    // printf("Added onscreen geometry function to cache (index %d): %p\n",
-    //        renderer->state.cache.ngeometry_fns_onscreen - 1, (void *)fn);
+void GeometryFunctionOnScreenAdd(br_renderer *renderer, geometry_fn *fn)
+{
+	ASSERT(renderer->state.cache.ngeometry_fns_onscreen < BR_ASIZE(renderer->state.cache.geometry_fns_onscreen));
+	renderer->state.cache.geometry_fns_onscreen[renderer->state.cache.ngeometry_fns_onscreen++] = fn;
 }
-
 
 void GeometryFunctionBothAdd(br_renderer *renderer, geometry_fn *fn)
 {

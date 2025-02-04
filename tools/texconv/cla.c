@@ -160,9 +160,10 @@ br_uint_32 T_DecodeCommand(char *command, t_list *list)
 	char *delim = ",";
 	t_cla *new_node;
 	br_uint_32 count = 0;
-	char *saveptr;
+
 	
-	argument = strtok_r(BrMemStrDup(command), delim, &saveptr);
+
+	argument = strtok(BrMemStrDup(command), delim);
 	while(argument != NULL) {
 
 		new_node = BrResAllocate(list, sizeof(*new_node), BR_MEMORY_APPLICATION);
@@ -175,7 +176,7 @@ br_uint_32 T_DecodeCommand(char *command, t_list *list)
 		
 		count++;
 
-		argument = strtok_r(0, delim, &saveptr);
+		argument = strtok(NULL, delim);
 	}
 	
 	return count;

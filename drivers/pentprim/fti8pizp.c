@@ -161,7 +161,7 @@ next_pixel:
 	// ;
 
     // mov		dl,[ebp]
-    edx.short_low = *ebp.ptr_16;
+    edx.short_val[0] = *ebp.ptr_16;
     // mov		cl,[eax+esi]
     ecx.l = esi.ptr_8[eax.v];
 
@@ -172,7 +172,7 @@ next_pixel:
 
     // cmp		bx,dx
     // ja		nodraw
-    if (ebx.short_low > edx.short_low) {
+    if (ebx.short_val[0] > edx.short_val[0]) {
         goto nodraw;
     }
 
@@ -215,7 +215,7 @@ next_pixel:
         // ; Store texel and z
 	    // ;
         // mov     [ebp],bx
-        *ebp.ptr_16 = ebx.short_low;
+        *ebp.ptr_16 = ebx.short_val[0];
         // mov     [edi],cl
         *edi.ptr_8 = ecx.l;
     }
@@ -630,7 +630,7 @@ next_pixel:
 	// ;
 
     // mov		dx,[ebp]
-    edx.short_low = *ebp.ptr_16;
+    edx.short_val[0] = *ebp.ptr_16;
     // xor		ecx,ecx
     ecx.v = 0;
     // mov		ebx,work.tsl.z
@@ -640,7 +640,7 @@ next_pixel:
 
     // cmp		bx,dx
     // ja		nodraw
-    if (ebx.short_low > edx.short_low) {
+    if (ebx.short_val[0] > edx.short_val[0]) {
         goto nodraw;
     }
 
@@ -679,7 +679,7 @@ next_pixel:
         // ; Look texel up in shade table, store texel and z
 	    // ;
         // mov     [ebp],bx
-        *ebp.ptr_16 = ebx.short_low;
+        *ebp.ptr_16 = ebx.short_val[0];
         // mov     cl,[ecx+edx]
         ecx.l = edx.ptr_8[ecx.v];
         // mov     [edi],cl
@@ -1845,15 +1845,15 @@ carry:
     }
 }
 
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c)  {
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_32_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c)  {
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_32_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPT_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPT_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
@@ -1873,9 +1873,7 @@ void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_64(brp_block *block, ...) {
     // jc TriangleRasterise_ZTI_I8_D16_64
     if (x86_state.cf) {
         va_list l;
-        va_start(l, block);
         TriangleRender_ZTI_I8_D16_POW2(block, 6, 1, l);
-        va_end(l);
         return;
     }
 
@@ -2044,9 +2042,7 @@ void BR_ASM_CALL TriangleRender_ZPT_I8_D16_64(brp_block *block, ...) {
     // jc TriangleRasterise_ZT_I8_D16_64
     if (x86_state.cf) {
         va_list l;
-        va_start(l, block);
         TriangleRender_ZT_I8_D16_POW2(block, 6, 1, l);
-        va_end(l);
         return;
     }
 
@@ -2177,17 +2173,17 @@ reversed:
 
 }
 
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
 
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_128_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_128_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
 
-void BR_ASM_CALL TriangleRender_ZPT_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPT_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
@@ -2208,9 +2204,7 @@ void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_256(brp_block *block, ...) {
     // jc TriangleRasterise_ZTI_I8_D16_256
     if (x86_state.cf) {
         va_list l;
-        va_start(l, block);
         TriangleRender_ZTI_I8_D16_POW2(block, 8, 1, l);
-        va_end(l);
         return;
     }
 
@@ -2344,7 +2338,7 @@ reversed:
     TrapeziumRender_ZPTI_I8_D16(DIR_B, eTrapezium_render_size_256, eFog_no, eBlend_no);
 }
 
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_256_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_256_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
@@ -2365,9 +2359,7 @@ void BR_ASM_CALL TriangleRender_ZPT_I8_D16_256(brp_block *block, ...) {
     // jc TriangleRasterise_ZT_I8_D16_256
     if (x86_state.cf) {
         va_list l;
-        va_start(l, block);
         TriangleRender_ZT_I8_D16_POW2(block, 8, 1, l);
-        va_end(l);
         return;
     }
 
@@ -2493,95 +2485,95 @@ reversed:
     TrapeziumRender_ZPT_I8_D16(DIR_B, eTrapezium_render_size_256, eFog_no, eBlend_no);
 }
 
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_1024_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_1024_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPT_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c){
+void BR_ASM_CALL TriangleRender_ZPT_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_32_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_32_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_64(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_64_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_64_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_64(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_128_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c){
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_128_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_256(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_256_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_256_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_256(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_1024_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIF_I8_D16_1024_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTF_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c)  {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_32_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_32_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_64(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_64_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_64_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
@@ -2602,9 +2594,7 @@ void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_64(brp_block *block, ...) {
     // jc TriangleRasterise_ZTB_I8_D16_64
     if (x86_state.cf) {
         va_list l;
-        va_start(l, block);
         TriangleRender_ZTB_I8_D16_POW2(block, 6, 1, l);
-        va_end(l);
         return;
     }
 #else
@@ -2738,23 +2728,23 @@ reversed:
 
 }
 
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_128_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_128_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_256(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_256_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_256_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
@@ -2775,9 +2765,7 @@ void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_256(brp_block *block, ...) {
     // jc TriangleRasterise_ZTB_I8_D16_256
     if (x86_state.cf) {
         va_list l;
-        va_start(l, block);
         TriangleRender_ZTB_I8_D16_POW2(block, 8, 1, l);
-        va_end(l);
         return;
     }
 #else
@@ -2906,75 +2894,75 @@ reversed:
     TrapeziumRender_ZPT_I8_D16(DIR_B, eTrapezium_render_size_256, eFog_no, eBlend_yes);
 }
 
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_1024_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_1024_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_32_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_32_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_64(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_64_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_64_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_64(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_128_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_128_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_256(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_256_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_256_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_256(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_1024_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTIFB_I8_D16_1024_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }

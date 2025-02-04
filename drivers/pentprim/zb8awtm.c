@@ -384,13 +384,13 @@ drawLine:
 
 drawPixel:
     // 	mov bx,[ebp+2*ecx]
-    ebx.short_low = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val];
+    ebx.short_val[0] = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val];
     // 	mov dx,word ptr workspace.c_z+2
-    edx.short_low = workspace.c_z >> 16;
+    edx.short_val[0] = ((uint16_t *)&workspace.c_z)[1];
 
     // 	cmp dx,bx
     // 	ja noPlot
-    if(edx.short_low > ebx.short_low) {
+    if(edx.short_val[0] > ebx.short_val[0]) {
         goto noPlot;
     }
 
@@ -439,7 +439,7 @@ drawPixel:
         // else
         } else {
             //     mov [ebp+2*ecx],dx
-            ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = edx.short_low;
+            ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = edx.short_val[0];
             // 	   mov [edi+ecx],bl
             ((uint8_t *)work.colour.base)[edi.v + ecx.v] = ebx.l;
         // endif
@@ -618,13 +618,13 @@ drawLine:
 
 drawPixel:
     // 	mov bx,[ebp+2*ecx]
-    ebx.short_low = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val];
+    ebx.short_val[0] = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val];
     // 	mov dx,word ptr workspace.c_z+2
-    edx.short_low = workspace.c_z >> 16;
+    edx.short_val[0] = ((uint16_t *)&workspace.c_z)[1];
 
     // 	cmp dx,bx
     // 	ja noPlot
-    if(edx.short_low > ebx.short_low) {
+    if(edx.short_val[0] > ebx.short_val[0]) {
         goto noPlot;
     }
 
@@ -684,7 +684,7 @@ drawPixel:
             // mov bl,byte ptr [eax+ebx]
             ebx.l = ((uint8_t *)work.shade_table)[ebx.v];
 	        // mov [ebp+2*ecx],dx
-            ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = edx.short_low;
+            ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = edx.short_val[0];
             // 	   mov [edi+ecx],bl
             ((uint8_t *)work.colour.base)[edi.v + ecx.v] = ebx.l;
         // endif
@@ -865,9 +865,9 @@ void TriangleRender_ZT_I8_D16(brp_block *block, ...)
     // 	faddp st(2),st					;	ca			da
     FADDP_ST(2, 0);
     // 	fstp qword ptr workspace.scanAddress
-    FSTP64(&workspace.scanAddress_double);
+    FSTP64(&workspace.scanAddress);
     // 	fstp qword ptr workspace.depthAddress
-    FSTP64(&workspace.depthAddress_double);
+    FSTP64(&workspace.depthAddress);
 
     // 	mov eax,work.texture.base
     eax.v = WORK_TEXTURE_BASE;
@@ -983,9 +983,9 @@ void BR_ASM_CALL TriangleRender_ZTI_I8_D16(brp_block *block, ...) {
     // 	faddp st(2),st					;	ca			da
     FADDP_ST(2, 0);
     // 	fstp qword ptr workspace.scanAddress
-    FSTP64(&workspace.scanAddress_double);
+    FSTP64(&workspace.scanAddress);
     // 	fstp qword ptr workspace.depthAddress
-    FSTP64(&workspace.depthAddress_double);
+    FSTP64(&workspace.depthAddress);
 
     // 	mov eax,work.texture.base
     eax.v = WORK_TEXTURE_BASE;
@@ -1041,32 +1041,32 @@ void BR_ASM_CALL TriangleRender_ZTI_I8_D16_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTIF_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTIF_I8_D16(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTIF_I8_D16_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTIF_I8_D16_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTIB_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTIB_I8_D16(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTIB_I8_D16_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTIB_I8_D16_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTIFB_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTIFB_I8_D16(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTIFB_I8_D16_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTIFB_I8_D16_FLAT(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
 
-void BR_ASM_CALL TriangleRender_ZTF_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTF_I8_D16(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
@@ -1133,9 +1133,9 @@ void BR_ASM_CALL TriangleRender_ZTB_I8_D16(brp_block *block, ...) {
     // 	faddp st(2),st					;	ca			da
     FADDP_ST(2, 0);
     // 	fstp qword ptr workspace.scanAddress
-    FSTP64(&workspace.scanAddress_double);
+    FSTP64(&workspace.scanAddress);
     // 	fstp qword ptr workspace.depthAddress
-    FSTP64(&workspace.depthAddress_double);
+    FSTP64(&workspace.depthAddress);
 
     // 	mov eax,work.texture.base
     eax.v = WORK_TEXTURE_BASE;
@@ -1186,7 +1186,7 @@ void BR_ASM_CALL TriangleRender_ZTB_I8_D16(brp_block *block, ...) {
             BrFailure("Invalid enum value");
     }
 }
-void BR_ASM_CALL TriangleRender_ZTFB_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTFB_I8_D16(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }

@@ -9,7 +9,7 @@
 #include "drv.h"
 #include "shortcut.h"
 #include "brassert.h"
-#include <stdio.h>
+
 BR_RCS_ID("$Id: match.c 1.1 1997/12/10 16:47:17 jon Exp $");
 
 /*
@@ -850,7 +850,7 @@ br_error BR_CMETHOD_DECL(br_primitive_state_soft, rangesQueryF)(
 		br_int_32 max_comp)
 {
 	int i;
-	// printf("rangesQueryF\n");
+
 	/*
 	 * Fail if the current info is not valid
 	 */
@@ -859,9 +859,6 @@ br_error BR_CMETHOD_DECL(br_primitive_state_soft, rangesQueryF)(
 		return BRE_FAIL;
 
 	for(i=0; i < max_comp; i++) {
-		//     printf("Component %d: Offset %f, Scale %f\n", i, 
-        //    BrScalarToFloat(self->cache.comp_offsets[i]), 
-        //    BrScalarToFloat(self->cache.comp_scales[i]));
 		offset[i] = BrScalarToFloat(self->cache.comp_offsets[i]);
 		scale[i] = BrScalarToFloat(self->cache.comp_scales[i]);
 	}

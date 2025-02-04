@@ -91,7 +91,7 @@ drawPixel:
     // mov ah,byte ptr[workspace.c_i+2]
     eax.h = BYTE2(workspace.c_i);
     // ja noPlot
-    if (ebx.short_low > edx.short_low) {
+    if (ebx.short_val[0] > edx.short_val[0]) {
         goto noPlot;
     }
     // test al,al
@@ -105,7 +105,7 @@ drawPixel:
         goto noPlot;
     }
     // mov [ebp+2*ecx],bx ;two cycles
-    ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = ebx.short_low;
+    ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = ebx.short_val[0];
     // mov [esi+ecx],al
     ((uint8_t *)work.colour.base)[esi.v + ecx.v] = eax.l;
 
@@ -337,9 +337,9 @@ void BR_ASM_CALL TriangleRender_ZTI_I8_D16_POW2(brp_block *block, int pow2, int 
 	workspace.xm_f = eax.v;
 
 // 	fstp qword ptr workspace.scanAddress
-	FSTP64(&workspace.scanAddress_double);
+	FSTP64(&workspace.scanAddress);
 // 	fstp qword ptr workspace.depthAddress
-	FSTP64(&workspace.depthAddress_double);
+	FSTP64(&workspace.depthAddress);
 
 // 	mov workspace.d_xm_f,ebx
 	workspace.d_xm_f = ebx.v;
@@ -383,11 +383,11 @@ void BR_ASM_CALL TriangleRender_ZTI_I8_D16_8(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_16(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_32(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }

@@ -9,7 +9,7 @@ void BR_ASM_CALL TriangleRenderPIZ2I(brp_block *block, brp_vertex *v0, brp_verte
 }
 void BR_ASM_CALL TriangleRender_ZI_I8_D16_ShadeTable(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
     // Not implemented
-    BrAbort(); 
+    BrAbort();
 }
 
 void BR_ASM_CALL TriangleRender_ZIF_I8_D16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {

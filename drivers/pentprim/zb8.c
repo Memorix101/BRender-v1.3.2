@@ -64,7 +64,7 @@ drawPixel:
     // mov dl,[ebp+2*ecx]
     // ;The following line needs some more experimentation to prove its usefullness in real application
     // mov dh,[ebp+2*ecx+1]
-    edx.short_low = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val];
+    edx.short_val[0] = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val];
     // cmp eax,edx
     // ja noPlot
     if (eax.v > edx.v) {
@@ -72,7 +72,7 @@ drawPixel:
     }
     // ; writes
     // mov [ebp+2*ecx],ax
-    ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = eax.short_low;
+    ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = eax.short_val[0];
     // mov [edi+ecx],bl
     ((uint8_t *)work.colour.base)[edi.v + ecx.v] = ebx.l;
 noPlot:
@@ -219,9 +219,9 @@ void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, ...) {
     // faddp st(2),st					;	ca			da
     FADDP_ST(2, 0);
     // fstp qword ptr workspace.scanAddress
-    FSTP64(&workspace.scanAddress_double);
+    FSTP64(&workspace.scanAddress);
     // fstp qword ptr workspace.depthAddress
-    FSTP64(&workspace.depthAddress_double);
+    FSTP64(&workspace.depthAddress);
     // mov eax,workspace.xm
     eax.v = workspace.xm;
     // shl eax,16
@@ -262,7 +262,7 @@ void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, ...) {
     }
 }
 
-void BR_ASM_CALL TriangleRender_Z_I8_D16_ShadeTable(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+void BR_ASM_CALL TriangleRender_Z_I8_D16_ShadeTable(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }

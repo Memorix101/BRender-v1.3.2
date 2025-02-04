@@ -98,7 +98,7 @@ drawPixel:
 
 // 	cmp dx,bx ;two cycles
 // 	ja noPlot
-    if(edx.short_low > ebx.short_low) {
+    if(edx.short_val[0] > ebx.short_val[0]) {
         goto noPlot;
     }
 
@@ -114,7 +114,7 @@ drawPixel:
 
 // 	mov [ebp+2*ecx],dl
 // 	mov [ebp+2*ecx+1],dh
-	((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = edx.short_low;
+	((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = edx.short_val[0];
 // 	mov [edi+ecx],al
 	((uint8_t *)work.colour.base)[edi.v + ecx.v] = eax.l;
 
@@ -342,9 +342,9 @@ void BR_ASM_CALL TriangleRender_ZT_I8_D16_POW2(brp_block *block, int pow2, int s
 	workspace.xm_f = eax.v;
 
 // 	fstp qword ptr workspace.scanAddress
-	FSTP64(&workspace.scanAddress_double);
+	FSTP64(&workspace.scanAddress);
 // 	fstp qword ptr workspace.depthAddress
-	FSTP64(&workspace.depthAddress_double);
+	FSTP64(&workspace.depthAddress);
 
 // 	mov workspace.d_xm_f,ebx
 	workspace.d_xm_f = ebx.v;
