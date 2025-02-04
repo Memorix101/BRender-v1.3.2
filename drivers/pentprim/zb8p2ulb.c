@@ -346,9 +346,9 @@ void BR_ASM_CALL TriangleRender_ZTB_I8_D16_POW2(brp_block *block, int pow2, int 
 	workspace.xm_f = eax.v;
 
 // 	fstp qword ptr workspace.scanAddress
-	FSTP64(&workspace.scanAddress_double);
+	FSTP64(&workspace.scanAddress);
 // 	fstp qword ptr workspace.depthAddress
-	FSTP64(&workspace.depthAddress_double);
+	FSTP64(&workspace.depthAddress);
 
 // 	mov workspace.d_xm_f,ebx
 	workspace.d_xm_f = ebx.v;
@@ -388,15 +388,15 @@ void BR_ASM_CALL TriangleRender_ZTB_I8_D16_POW2(brp_block *block, int pow2, int 
 	}
 }
 
-void BR_ASM_CALL TriangleRender_ZTB_I8_D16_8(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTB_I8_D16_8(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTB_I8_D16_16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTB_I8_D16_16(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
-void BR_ASM_CALL TriangleRender_ZTB_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTB_I8_D16_32(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
@@ -407,7 +407,7 @@ void BR_ASM_CALL TriangleRender_ZTB_I8_D16_64(brp_block *block, ...) {
 	TriangleRender_ZTB_I8_D16_POW2(block, 6, 0, va);
 	va_end(va);
 }
-void BR_ASM_CALL TriangleRender_ZTB_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTB_I8_D16_128(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }
@@ -417,7 +417,7 @@ void BR_ASM_CALL TriangleRender_ZTB_I8_D16_256(brp_block *block, ...) {
 	TriangleRender_ZTB_I8_D16_POW2(block, 8, 0, va);
 	va_end(va);
 }
-void BR_ASM_CALL TriangleRender_ZTB_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c) {
+void BR_ASM_CALL TriangleRender_ZTB_I8_D16_1024(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }

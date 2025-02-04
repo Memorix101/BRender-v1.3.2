@@ -212,7 +212,7 @@ typedef struct brp_block {
 	br_uint_32	_reserved_1;
 	br_uint_32	_reserved_2;
 
-} brp_block __attribute__((aligned(4)));
+} brp_block;
 
 /*
  * A cut down version of the above block that is used to chain

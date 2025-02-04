@@ -219,9 +219,9 @@ void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, ...) {
     // faddp st(2),st					;	ca			da
     FADDP_ST(2, 0);
     // fstp qword ptr workspace.scanAddress
-    FSTP64(&workspace.scanAddress_double);
+    FSTP64(&workspace.scanAddress);
     // fstp qword ptr workspace.depthAddress
-    FSTP64(&workspace.depthAddress_double);
+    FSTP64(&workspace.depthAddress);
     // mov eax,workspace.xm
     eax.v = workspace.xm;
     // shl eax,16
@@ -262,7 +262,7 @@ void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, ...) {
     }
 }
 
-void BR_ASM_CALL TriangleRender_Z_I8_D16_ShadeTable(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+void BR_ASM_CALL TriangleRender_Z_I8_D16_ShadeTable(brp_block *block, ...) {
     // Not implemented
     BrAbort();
 }

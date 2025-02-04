@@ -11,7 +11,7 @@
 
 typedef struct br_matrix23 {
 	br_scalar m[3][2];
-} br_matrix23 __attribute__((aligned(4)));
+} br_matrix23;
 
 typedef struct br_matrix23_f {
 	br_float m[3][2];
