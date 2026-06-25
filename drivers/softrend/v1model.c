@@ -518,19 +518,31 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
     }
 
     /* Vertex colour. Textured surfaces modulate the texture by intensity (white
-     * = full brightness). Untextured flat/gouraud surfaces have no texture, and
-     * here comp_f[C_I] is already the final shade-ramp palette index, so the real
-     * surface colour comes straight from the palette - using dc_face_colour (which
-     * treats C_I as 0..1) would clamp it to white. */
+     * = full brightness) - this also covers a surface that HAS a texture but
+     * whose PVR registration failed (texid < 0, texture cache full/VRAM
+     * exhausted): it falls back to flat grey-by-intensity rather than a
+     * texture-less draw, because comp_f[C_I] there is a 0..1 brightness, not a
+     * palette index, and would otherwise pick a near-random palette entry as a
+     * solid colour. Untextured flat/gouraud surfaces (tpix == NULL) have no
+     * texture by design, and there comp_f[C_I] really is the final shade-ramp
+     * palette index, so the real surface colour comes straight from the
+     * palette - dc_face_colour (which treats C_I as 0..1) would clamp it to
+     * white. */
     unsigned int c0, c1, c2;
-    if (texid >= 0) {
+    if (tpix != NULL) {
         c0 = dc_face_colour(v0);
         c1 = dc_face_colour(v1);
         c2 = dc_face_colour(v2);
+        if (texid < 0) {
+            extern int g3d_diag_texfail;
+            g3d_diag_texfail++;
+        }
     } else {
         c0 = DCPVR3D_PaletteColor((int)(v0->comp_f[C_I] + 0.5f));
         c1 = DCPVR3D_PaletteColor((int)(v1->comp_f[C_I] + 0.5f));
         c2 = DCPVR3D_PaletteColor((int)(v2->comp_f[C_I] + 0.5f));
+        extern int g3d_diag_notex;
+        g3d_diag_notex++;
     }
 
     /* Pick the PowerVR list for this triangle:

@@ -15,6 +15,14 @@
 
 #include "brender.h"
 
+// Temporary diagnostics: tell apart the three reasons DC_GetCurrentTexture can
+// report "no texture", to track down why a known-textured material (the sky
+// dome) was rendering flat instead of with its texture.
+int g3d_diag_nullps;
+int g3d_diag_nullbuf;
+int g3d_diag_wrongtype;
+int g3d_diag_lasttype = -1;
+
 void *DC_GetCurrentTexture(void *pstate_v, int *width, int *height, int *stride, int *opaque)
 {
     struct br_primitive_state *ps = (struct br_primitive_state *)pstate_v;
@@ -22,13 +30,17 @@ void *DC_GetCurrentTexture(void *pstate_v, int *width, int *height, int *stride,
 
     *opaque = 1;
     if (ps == NULL) {
+        g3d_diag_nullps++;
         return NULL;
     }
     bs = ps->prim.colour_map.buffer;
     if (bs == NULL || bs->buffer.base == NULL) {
+        g3d_diag_nullbuf++;
         return NULL;
     }
     if (bs->buffer.type != BR_PMT_INDEX_8) {
+        g3d_diag_wrongtype++;
+        g3d_diag_lasttype = bs->buffer.type;
         return NULL;
     }
     /* PRIMF_OPAQUE_MAP clear means the map keys colour index 0 as transparent,
