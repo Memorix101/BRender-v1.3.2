@@ -7,7 +7,6 @@
  * XXX should condense all the BrXXXFind() functions into one,
  * since the logic is the same for each!
  */
-#include <stdio.h>
 #include <stdarg.h>
 
 #include "fw.h"
@@ -52,13 +51,11 @@ br_error BR_PUBLIC_ENTRY BrDevBeginVar(br_pixelmap **ppm, char *setup_string, ..
 		if (i == BR_ASIZE(tv))
 			BR_FAILURE("Too many token value pairs");
 
-		if ((n = va_arg(vl, int)) == BR_NULL_TOKEN)
+		if ((n = va_arg(vl, br_token)) == BR_NULL_TOKEN)
 			break;
 
-		*((int *)&tv[i].t) = n;
-
-		n = va_arg(vl, int);
-		*((int *)&tv[i].v.u32) = n;
+        tv[i].t = n;
+        tv[i].v = BrTokenValueVaArg(n, &vl);
 	}
 
 	tv[i].t = BR_NULL_TOKEN;
@@ -451,8 +448,8 @@ br_error BR_RESIDENT_ENTRY BrRendererFacilityListFind(br_renderer_facility **prf
 	char object_pattern[] = "*-Renderer-00000";
 	br_boolean scalar_is_valid = BR_FALSE;
 	br_token_value is_alternative[] = {
-		{ BRT_ALTERNATIVE_TO_DEFAULT_B, (br_value) { .t = BR_TRUE } },
-		{ BR_NULL_TOKEN , (br_value) { .p = NULL }}
+		{ BRT_ALTERNATIVE_TO_DEFAULT_B, { BR_TRUE } },
+		{ BR_NULL_TOKEN , { 0 } }
 	};
 	char *identifier;
 	br_size_t identifier_len;
@@ -722,8 +719,8 @@ br_error BR_RESIDENT_ENTRY BrPrimitiveLibraryListFind(br_primitive_library **ppl
 	char object_pattern[] = "*-Primitives-00000";
 	br_boolean scalar_is_valid = BR_FALSE;
 	br_token_value is_alternative[] = {
-		{ BRT_ALTERNATIVE_TO_DEFAULT_B, (br_value) { .t = BR_TRUE } },
-		{ BR_NULL_TOKEN , (br_value) { .p = NULL }}
+		{ BRT_ALTERNATIVE_TO_DEFAULT_B, { BR_TRUE } },
+		{ BR_NULL_TOKEN ,  {  0 }}
 	};
 	char *identifier;
 	br_size_t identifier_len;

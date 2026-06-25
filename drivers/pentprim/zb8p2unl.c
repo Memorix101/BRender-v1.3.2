@@ -80,7 +80,7 @@ drawPixel:
 // 	shr esi,16-pow2
 	esi.v >>= (16 - pow2);
 // 	mov bl,[ebp+2*ecx]
-	ebx.v = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val];
+	ebx.v = DEPTH_READ16(work.depth.base, ebp.v, ecx.v);
 
 // 	shr eax,16
 	eax.v >>= 16;
@@ -98,9 +98,9 @@ drawPixel:
 
 // 	cmp dx,bx ;two cycles
 // 	ja noPlot
-    if(edx.short_low > ebx.short_low) {
-        goto noPlot;
-    }
+	if(edx.short_low > ebx.short_low) {
+		goto noPlot;
+	}
 
 
 // 	mov al,[esi+eax]
@@ -114,7 +114,7 @@ drawPixel:
 
 // 	mov [ebp+2*ecx],dl
 // 	mov [ebp+2*ecx+1],dh
-	((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = edx.short_low;
+	DEPTH_WRITE16(work.depth.base, ebp.v, ecx.v, edx.short_low);
 // 	mov [edi+ecx],al
 	((uint8_t *)work.colour.base)[edi.v + ecx.v] = eax.l;
 
@@ -258,17 +258,14 @@ lineDrawn:
 	}
 }
 
-void BR_ASM_CALL TriangleRender_ZT_I8_D16_POW2(brp_block *block, int pow2, int skip_setup, va_list va) {
+void BR_ASM_CALL TriangleRender_ZT_I8_D16_POW2(brp_block *block, int pow2, int skip_setup, brp_vertex* v0, brp_vertex* v1, brp_vertex* v2) {
+    /*
 	brp_vertex *v0; // [esp+18h] [ebp+Ch]
     brp_vertex *v1; // [esp+1Ch] [ebp+10h]
     brp_vertex *v2; // [esp+20h] [ebp+14h]
+	*/
 
 	if (!skip_setup) {
-		v0 = va_arg(va, brp_vertex *);
-		v1 = va_arg(va, brp_vertex *);
-		v2 = va_arg(va, brp_vertex *);
-		va_end(va);
-
 		workspace.v0 = v0;
 		workspace.v1 = v1;
 		workspace.v2 = v2;
@@ -349,7 +346,7 @@ void BR_ASM_CALL TriangleRender_ZT_I8_D16_POW2(brp_block *block, int pow2, int s
 // 	mov workspace.d_xm_f,ebx
 	workspace.d_xm_f = ebx.v;
 // 	cmp edx,80000000
-	CMP(edx.v, 80000000);
+	CMP(edx.v, 0x80000000);
 
 // 	adc edx,-1
 	ADC(edx.v, -1);
@@ -385,36 +382,29 @@ void BR_ASM_CALL TriangleRender_ZT_I8_D16_POW2(brp_block *block, int pow2, int s
 }
 
 void BR_ASM_CALL TriangleRender_ZT_I8_D16_8(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
-    // Not implemented
-    BrAbort();
-}
-void BR_ASM_CALL TriangleRender_ZT_I8_D16_16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
-    // Not implemented
-    BrAbort();
-}
-void BR_ASM_CALL TriangleRender_ZT_I8_D16_32(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
-    // Not implemented
-    BrAbort();
+    TriangleRender_ZT_I8_D16_POW2(block, 3, 0, v0, v1, v2);
 }
 
-void BR_ASM_CALL TriangleRender_ZT_I8_D16_64(brp_block *block, ...) {
-    va_list     va;
-    va_start(va, block);
-	TriangleRender_ZT_I8_D16_POW2(block, 6, 0, va);
-	va_end(va);
+void BR_ASM_CALL TriangleRender_ZT_I8_D16_16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+    TriangleRender_ZT_I8_D16_POW2(block, 4, 0, v0, v1, v2);
+}
+
+void BR_ASM_CALL TriangleRender_ZT_I8_D16_32(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+    TriangleRender_ZT_I8_D16_POW2(block, 5, 0, v0, v1, v2);
+}
+
+void BR_ASM_CALL TriangleRender_ZT_I8_D16_64(brp_block *block, brp_vertex* v0, brp_vertex* v1, brp_vertex* v2) {
+	TriangleRender_ZT_I8_D16_POW2(block, 6, 0, v0, v1, v2);
 }
 
 void BR_ASM_CALL TriangleRender_ZT_I8_D16_128(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
-    // Not implemented
-    BrAbort();
+    TriangleRender_ZT_I8_D16_POW2(block, 7, 0, v0, v1, v2);
 }
-void BR_ASM_CALL TriangleRender_ZT_I8_D16_256(brp_block *block, ...) {
-    va_list     va;
-    va_start(va, block);
-	TriangleRender_ZT_I8_D16_POW2(block, 8, 0, va);
-	va_end(va);
+
+void BR_ASM_CALL TriangleRender_ZT_I8_D16_256(brp_block *block, brp_vertex* v0, brp_vertex* v1, brp_vertex* v2) {
+	TriangleRender_ZT_I8_D16_POW2(block, 8, 0, v0, v1, v2);
 }
+
 void BR_ASM_CALL TriangleRender_ZT_I8_D16_1024(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
-    // Not implemented
-    BrAbort();
+    TriangleRender_ZT_I8_D16_POW2(block, 10, 0, v0, v1, v2);
 }

@@ -1,12 +1,12 @@
-project(host)
+﻿project(host C)
 
 target_include_directories(brender-inc INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/brender>
         )
 target_include_directories(brender-inc-ddi INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ddi>
-        $<INSTALL_INTERFACE:ddi>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/brender/ddi>
         )
 
 set(DDI_FILES
@@ -44,11 +44,5 @@ target_sources(host INTERFACE
         FILES ${DDI_FILES}
         )
 
-target_include_directories(host PRIVATE .)        
-if(__DREAMCAST__)
-        target_link_libraries(host PRIVATE brender-inc-ddi)
-else()
-        target_link_libraries(host PRIVATE brender-inc-ddi ${CMAKE_DL_LIBS})
-endif()
-
-
+target_include_directories(host PRIVATE .)
+target_link_libraries(host PRIVATE brender-inc-ddi ${CMAKE_DL_LIBS})

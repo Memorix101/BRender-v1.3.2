@@ -241,7 +241,7 @@ struct state_cache {
 	 * Component offsets and scales
 	 */
 	br_scalar comp_offsets[NUM_COMPONENTS];
-	br_scalar comp_scales[NUM_COMPONENTS] __attribute__((aligned(4)));
+	br_scalar comp_scales[NUM_COMPONENTS];
 
 	/*
 	 * Cached geometry & surface functions

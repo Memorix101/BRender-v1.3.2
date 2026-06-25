@@ -28,7 +28,7 @@ typedef union fp64_t {
     double double_val;
 } fp64_t;
 
-struct ALIGN(32) workspace_t {
+struct ALIGN(8) workspace_t {
     // qwords start here
 
 	union {
@@ -371,7 +371,7 @@ struct ALIGN(32) workspace_t {
 #define m_y        workspace.t_dy
 #define sort_value workspace.top_vertex
 
-struct ALIGN(32) ArbitraryWidthWorkspace_t {
+struct ALIGN(8) ArbitraryWidthWorkspace_t {
     union {
         struct {
 #if BR_ENDIAN_BIG

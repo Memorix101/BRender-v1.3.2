@@ -14,7 +14,7 @@
 #include "brassert.h"
 
 #include "vecifns.h"
-#include <stdio.h>
+
 #include "timing.h"
 
 BR_RCS_ID("$Id: v1model.c 1.8 1998/07/21 11:35:57 jon Exp $");
@@ -591,18 +591,17 @@ static void GEOMETRY_CALL V1Face_Render(struct br_geometry *self, struct br_rend
 			clipped->render(clipped,
 				rend.temp_vertices+(*fp_vertices)[0],
 				rend.temp_vertices+(*fp_vertices)[1],
-				rend.temp_vertices+(*fp_vertices)[2], fp_vertices, fp_edges, fp_eqn, tfp);
+				rend.temp_vertices+(*fp_vertices)[2], (br_uint_16 *)fp_vertices, (br_uint_16 *)fp_edges, fp_eqn, tfp);
 		} else {
 			unclipped->render(unclipped,
 				rend.temp_vertices+(*fp_vertices)[0],
 				rend.temp_vertices+(*fp_vertices)[1],
-				rend.temp_vertices+(*fp_vertices)[2], fp_vertices, fp_edges, fp_eqn, tfp);
+				rend.temp_vertices+(*fp_vertices)[2], (br_uint_16 *)fp_vertices, (br_uint_16 *)fp_edges, fp_eqn, tfp);
 		}
 	}
 }
 #endif
 
-#include <stdio.h>
 #ifndef V1Face_OS_Render
 void GEOMETRY_CALL V1Face_OS_Render(struct br_geometry *self, struct br_renderer *renderer)
 {
@@ -627,14 +626,7 @@ void GEOMETRY_CALL V1Face_OS_Render(struct br_geometry *self, struct br_renderer
 				rend.temp_vertices+(*fp_vertices)[0],
 				rend.temp_vertices+(*fp_vertices)[1],
 				rend.temp_vertices+(*fp_vertices)[2],
-<<<<<<< Updated upstream
-				fp_vertices, fp_edges, fp_eqn, tfp);
-
-			//return;
-#endif
-=======
 				(br_uint_16 *)fp_vertices, (br_uint_16 *)fp_edges, fp_eqn, tfp);
->>>>>>> Stashed changes
 		}
 	}
 }
@@ -663,7 +655,7 @@ void GEOMETRY_CALL V1Face_OSV_Render(struct br_geometry *self, struct br_rendere
 			rend.temp_vertices+(*fp_vertices)[0],
 			rend.temp_vertices+(*fp_vertices)[1],
 			rend.temp_vertices+(*fp_vertices)[2],
-			fp_vertices, fp_edges, fp_eqn, tfp);
+			(br_uint_16 *)fp_vertices, (br_uint_16 *)fp_edges, fp_eqn, tfp);
 	}
 }
 #endif
@@ -1056,7 +1048,7 @@ static br_error V1Model_Render
 		 * Merge opacity into alpha byte of colour
 		 */
 		scache.colour = renderer->state.surface.colour & 0xFFFFFF;
-		scache.colour |= BrScalarToInt(BR_CONST_MUL(renderer->state.surface.opacity,256)) << 24;
+		scache.colour |= (br_uint_32)BrScalarToInt(BR_CONST_MUL(renderer->state.surface.opacity,256)) << 24;
 
 		/*
 		 * Make sure base primitive block is hooked up to the right place
@@ -1105,10 +1097,8 @@ static br_error V1Model_Render
 		 * Invoke the current set of renderer functions on the group
 		 */
 		if(on_screen) {
-			for(i=0; i < renderer->state.cache.ngeometry_fns_onscreen; i++){
-				// printf("Calling: renderer->state.cache.ngeometry_fns_onscreen[%d]\n",i);
+			for(i=0; i < renderer->state.cache.ngeometry_fns_onscreen; i++)
 				renderer->state.cache.geometry_fns_onscreen[i](self,renderer);
-			}
 		} else {
 			for(i=0; i < renderer->state.cache.ngeometry_fns; i++)
 				renderer->state.cache.geometry_fns[i](self,renderer);

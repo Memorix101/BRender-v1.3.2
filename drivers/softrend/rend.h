@@ -363,7 +363,7 @@ extern _static_cache BR_ASM_DATA scache;
 /*
  * Alignment for block in scratch area
  */
-#define SCRATCH_BOUNDARY 32
+#define SCRATCH_BOUNDARY 16
 #define SCRATCH_ALIGN(x) (((x)+(SCRATCH_BOUNDARY-1)) & ~(SCRATCH_BOUNDARY-1))
 
 /*

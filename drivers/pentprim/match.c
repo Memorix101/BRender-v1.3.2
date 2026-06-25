@@ -9,7 +9,7 @@
 #include "drv.h"
 #include "shortcut.h"
 #include "brassert.h"
-#include <stdio.h>
+
 BR_RCS_ID("$Id: match.c 1.1 1997/12/10 16:47:17 jon Exp $");
 
 /*
@@ -819,7 +819,7 @@ void BR_ASM_CALL RenderAutoloadThunk(brp_block *block, brp_vertex *v0, brp_verte
 	/*
 	 * Hand over to new rendering function
 	 */
-	render_fn(block,v0,v1,v2);
+	render_fn(block,v0,v1,v2,NULL,NULL,NULL,NULL);
 }
 
 /*
@@ -887,7 +887,7 @@ void BR_ASM_CALL GenericAutoloadThunk(brp_block *block, brp_vertex *v0, brp_vert
 	/*
 	 * Hand over to setp function
 	 */
-	pb->p.render(block,v0,v1,v2);
+	pb->p.render(block,v0,v1,v2,NULL,NULL,NULL,NULL);
 }
 
 br_error BR_CMETHOD_DECL(br_primitive_state_soft, rangesQueryF)(
@@ -897,7 +897,7 @@ br_error BR_CMETHOD_DECL(br_primitive_state_soft, rangesQueryF)(
 		br_int_32 max_comp)
 {
 	int i;
-	// printf("rangesQueryF\n");
+
 	/*
 	 * Fail if the current info is not valid
 	 */
@@ -906,9 +906,6 @@ br_error BR_CMETHOD_DECL(br_primitive_state_soft, rangesQueryF)(
 		return BRE_FAIL;
 
 	for(i=0; i < max_comp; i++) {
-		//     printf("Component %d: Offset %f, Scale %f\n", i, 
-        //    BrScalarToFloat(self->cache.comp_offsets[i]), 
-        //    BrScalarToFloat(self->cache.comp_scales[i]));
 		offset[i] = BrScalarToFloat(self->cache.comp_offsets[i]);
 		scale[i] = BrScalarToFloat(self->cache.comp_scales[i]);
 	}

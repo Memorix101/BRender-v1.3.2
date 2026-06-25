@@ -53,28 +53,28 @@ extern const unsigned long BR_ASM_DATA _reciprocal[2048];
 /*
  * ti8_piz.asm
  */
-void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, ...);  
+void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_Z_I8_D16_ShadeTable(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRenderPIZ2I(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZI_I8_D16_ShadeTable(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
-void BR_ASM_CALL TriangleRender_ZI_I8_D16(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZI_I8_D16(brp_block *block, brp_vertex *v0, brp_vertex *v1, brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZIF_I8_D16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZIF_I8_D16_FLAT(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 
 void BR_ASM_CALL TriangleRender_ZT_I8_D16_8(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZT_I8_D16_16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZT_I8_D16_32(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
-void BR_ASM_CALL TriangleRender_ZT_I8_D16_64(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZT_I8_D16_64(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZT_I8_D16_128(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
-void BR_ASM_CALL TriangleRender_ZT_I8_D16_256(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZT_I8_D16_256(brp_block *block, brp_vertex* v0, brp_vertex* v1, brp_vertex* v2);
 void BR_ASM_CALL TriangleRender_ZT_I8_D16_1024(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 
 void BR_ASM_CALL TriangleRender_ZTB_I8_D16_8(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZTB_I8_D16_16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZTB_I8_D16_32(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
-void BR_ASM_CALL TriangleRender_ZTB_I8_D16_64(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZTB_I8_D16_64(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZTB_I8_D16_128(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
-void BR_ASM_CALL TriangleRender_ZTB_I8_D16_256(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZTB_I8_D16_256(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZTB_I8_D16_1024(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 
 void BR_ASM_CALL TriangleRender_T_I8_32(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
@@ -82,14 +82,14 @@ void BR_ASM_CALL TriangleRender_T_I8_64(brp_block *block, brp_vertex *v0, brp_ve
 void BR_ASM_CALL TriangleRender_T_I8_128(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_T_I8_1024(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 
-// void BR_ASM_CALL TriangleRender_ZTI_I8_D16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZTI_I8_D16_8(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZTI_I8_D16_16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZTI_I8_D16_32(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_64(brp_block *block, ...);
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_128(brp_block *block, ...) ;
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_256(brp_block *block, ...);
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_1024(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_64(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_128(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_256(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_1024(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 
 void BR_ASM_CALL TriangleRender_ZTIB_I8_D16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
 void BR_ASM_CALL TriangleRender_ZTIB_I8_D16_8(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2);
@@ -167,17 +167,17 @@ void BR_ASM_CALL TriangleRenderPIZ2TA24(brp_block *block, brp_vertex *a,brp_vert
 void BR_ASM_CALL TriangleRenderPIZ2TIA_RGB_555(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRenderPIZ2TAN(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16(brp_block *block, ...);
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_FLAT(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZTIF_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZTIF_I8_D16_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZTIB_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZTIB_I8_D16_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZTIFB_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZTIFB_I8_D16_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
-void BR_ASM_CALL TriangleRender_ZT_I8_D16(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZT_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZTF_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
-void BR_ASM_CALL TriangleRender_ZTB_I8_D16(brp_block *block, ...) ;
+void BR_ASM_CALL TriangleRender_ZTB_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZTFB_I8_D16(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 
 /*
@@ -210,15 +210,15 @@ void BR_ASM_CALL TriangleRenderPIZ2TIPB256_RGB_565(brp_block *block, brp_vertex 
 void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_32_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPT_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_64(brp_block *block, ...);
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_64_FLAT(brp_block *block, ...);
-void BR_ASM_CALL TriangleRender_ZPT_I8_D16_64(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_64_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
+void BR_ASM_CALL TriangleRender_ZPT_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_128_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPT_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
-void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_256(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_256_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
-void BR_ASM_CALL TriangleRender_ZPT_I8_D16_256(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZPT_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTI_I8_D16_1024_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPT_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
@@ -242,13 +242,13 @@ void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_32_FLAT(brp_block *block, brp_verte
 void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_32(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_64_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
-void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_64(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_64(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_128_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_128(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_256_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
-void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_256(brp_block *block, ...);
+void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_256(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTIB_I8_D16_1024_FLAT(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
 void BR_ASM_CALL TriangleRender_ZPTB_I8_D16_1024(brp_block *block, brp_vertex *a,brp_vertex *b,brp_vertex *c);
@@ -272,9 +272,9 @@ void BR_ASM_CALL TriangleRender_ZPTFB_I8_D16_1024(brp_block *block, brp_vertex *
  * l_piz.c
  */
 
-void BR_ASM_CALL LineRenderPIZ2I(brp_block *block, ...);
-void BR_ASM_CALL LineRenderPIZ2T(brp_block *block, ...);
-void BR_ASM_CALL LineRenderPIZ2TI(brp_block *block, ...);
+void BR_ASM_CALL LineRenderPIZ2I(brp_block *block, brp_vertex *v0, brp_vertex *v1);
+void BR_ASM_CALL LineRenderPIZ2T(brp_block *block, brp_vertex *v0, brp_vertex *v1);
+void BR_ASM_CALL LineRenderPIZ2TI(brp_block *block, brp_vertex *v0, brp_vertex *v1);
 
 void BR_ASM_CALL LineRenderPFZ2I(brp_block *block, brp_vertex *v0,brp_vertex *v1);
 void BR_ASM_CALL LineRenderPFZ2I555(brp_block *block, brp_vertex *v0,brp_vertex *v1);

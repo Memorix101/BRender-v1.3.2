@@ -1,11 +1,11 @@
-##
+﻿##
 # BRender public includes.
 # Added to by each target.
 ##
 add_library(brender-inc INTERFACE)
 target_include_directories(brender-inc INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include/brender>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/brender>
         )
 
 ##
@@ -15,7 +15,7 @@ target_include_directories(brender-inc INTERFACE
 add_library(brender-inc-ddi INTERFACE)
 target_link_libraries(brender-inc-ddi INTERFACE brender-inc)
 
-set(BRENDER_TARGETS inc host std fw  fmt math pixelmap v1db)
+set(BRENDER_TARGETS inc host std fw  fmt math pixelmap v1db nulldev)
 set(BRENDER_OBJECTS)
 
 foreach (target ${BRENDER_TARGETS})

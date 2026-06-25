@@ -11,6 +11,8 @@
 
 #include "brender.h"
 
+struct temp_face;
+
 /**
  ** Primitive Vertex
  **/
@@ -136,7 +138,14 @@ typedef union brp_vertex {
 struct brp_block; //added to quiet compiler
 
 #ifndef __H2INC__
-typedef void BR_ASM_CALL brp_render_fn(struct brp_block *block, ...);
+typedef void BR_ASM_CALL brp_render_fn(struct brp_block *block,
+    brp_vertex* v0,
+    brp_vertex* v1,
+    brp_vertex* v2,
+    br_uint_16* fp_vertices,
+    br_uint_16* fp_edges,
+    br_vector4* fp_eqn,
+    struct temp_face* tfp);
 #else
 typedef void BR_ASM_CALL brp_render_fn(struct brp_block *block);
 #endif
@@ -212,7 +221,7 @@ typedef struct brp_block {
 	br_uint_32	_reserved_1;
 	br_uint_32	_reserved_2;
 
-} brp_block __attribute__((aligned(4)));
+} brp_block;
 
 /*
  * A cut down version of the above block that is used to chain

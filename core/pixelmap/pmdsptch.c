@@ -361,8 +361,8 @@ br_pixelmap * BR_PUBLIC_ENTRY BrPixelmapClone(br_pixelmap *src)
 	br_pixelmap *new;
 
 	br_token_value tv[] = {
-		{.t = BRT_USE_T,     .v = {.t = BRT_CLONE}},
-        {.t = BR_NULL_TOKEN, .v = 0               },
+		{ BRT_USE_T, BRT_CLONE},
+		{ BR_NULL_TOKEN, 0 }
 	};
 
 	CheckDispatch(src);
@@ -898,7 +898,7 @@ br_uint_16 BR_RESIDENT_ENTRY BrPixelmapChannels(br_pixelmap *pm)
 
 	return DevicePixelmapChannels(pm);
 }
-#include <stdio.h>
+
 void BR_PUBLIC_ENTRY BrPixelmapPaletteSet(br_pixelmap *pm, br_pixelmap *pal)
 {
 	UASSERT(pal);
@@ -964,6 +964,18 @@ br_pixelmap * BR_PUBLIC_ENTRY BrPixelmapDirectUnlock(br_pixelmap *src)
 	CheckDispatch(src);
 
 	if(DevicePixelmapDirectUnlock(src))
+		return NULL;
+
+	return src;
+}
+
+br_pixelmap * BR_PUBLIC_ENTRY BrPixelmapFlush(br_pixelmap *src)
+{
+	UASSERT(src);
+
+	CheckDispatch(src);
+
+	if(DevicePixelmapFlush(src))
 		return NULL;
 
 	return src;

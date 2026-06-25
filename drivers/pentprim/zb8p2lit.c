@@ -77,7 +77,7 @@ drawPixel:
     // and edi,mask shl pow2
     edi.v &= (mask << pow2);
     // mov dl,[ebp+2*ecx]
-    edx.v = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val]; //grab both bytes at once
+    edx.v = DEPTH_READ16(work.depth.base, ebp.v, ecx.v); //grab both bytes at once
     // or eax,edi
     eax.v |= edi.v;
     // mov dh,[ebp+2*ecx+1]
@@ -105,7 +105,7 @@ drawPixel:
         goto noPlot;
     }
     // mov [ebp+2*ecx],bx ;two cycles
-    ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = ebx.short_low;
+    DEPTH_WRITE16(work.depth.base, ebp.v, ecx.v, ebx.short_low);
     // mov [esi+ecx],al
     ((uint8_t *)work.colour.base)[esi.v + ecx.v] = eax.l;
 
@@ -241,29 +241,14 @@ lineDrawn:
     }
 }
 
-// #include <stdio.h>
-// static void print_brp_vertex(brp_vertex *v0, brp_vertex *v1, brp_vertex *v2) {
-//     printf("v0->flags = %d;\n", v0->flags);
-//     printf("v1->flags = %d;\n", v1->flags);
-//     printf("v2->flags = %d;\n", v2->flags);
-//     for (int i = 0; i < 16; i++) {
-//         printf("v0->comp_f[%d] = %f;\n", i, v0->comp_f[i]);
-//         printf("v1->comp_f[%d] = %f;\n", i, v1->comp_f[i]);
-//         printf("v2->comp_f[%d] = %f;\n", i, v2->comp_f[i]);
-//     }
-// }
-
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_POW2(brp_block *block, int pow2, int skip_setup, va_list va) {
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_POW2(brp_block *block, int pow2, int skip_setup, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+    /*
 	brp_vertex *v0; // [esp+18h] [ebp+Ch]
     brp_vertex *v1; // [esp+1Ch] [ebp+10h]
     brp_vertex *v2; // [esp+20h] [ebp+14h]
+    */
 
 	if (!skip_setup) {
-		v0 = va_arg(va, brp_vertex *);
-		v1 = va_arg(va, brp_vertex *);
-		v2 = va_arg(va, brp_vertex *);
-		va_end(va);
-
 		workspace.v0 = v0;
 		workspace.v1 = v1;
 		workspace.v2 = v2;
@@ -344,7 +329,7 @@ void BR_ASM_CALL TriangleRender_ZTI_I8_D16_POW2(brp_block *block, int pow2, int 
 // 	mov workspace.d_xm_f,ebx
 	workspace.d_xm_f = ebx.v;
 // 	cmp edx,80000000
-	CMP(edx.v, 80000000);
+	CMP(edx.v, 0x80000000);
 
 // 	adc edx,-1
 	ADC(edx.v, -1);
@@ -379,35 +364,24 @@ void BR_ASM_CALL TriangleRender_ZTI_I8_D16_POW2(brp_block *block, int pow2, int 
 	}
 }
 
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_8(brp_block *block, ...) {
-    // Not implemented
-    BrAbort();
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_8(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+    TriangleRender_ZTI_I8_D16_POW2(block, 3, 0, v0, v1, v2);
 }
 void BR_ASM_CALL TriangleRender_ZTI_I8_D16_16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
-    // Not implemented
-    BrAbort();
+    TriangleRender_ZTI_I8_D16_POW2(block, 4, 0, v0, v1, v2);
 }
 void BR_ASM_CALL TriangleRender_ZTI_I8_D16_32(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
-    // Not implemented
-    BrAbort();
+    TriangleRender_ZTI_I8_D16_POW2(block, 5, 0, v0, v1, v2);
 }
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_64(brp_block *block, ...) {
-    va_list     va;
-    va_start(va, block);
-	TriangleRender_ZTI_I8_D16_POW2(block, 6, 0, va);
-	va_end(va);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_64(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+	TriangleRender_ZTI_I8_D16_POW2(block, 6, 0, v0, v1, v2);
 }
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_128(brp_block *block, ...) {
-    // Not implemented
-    BrAbort();
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_128(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+    TriangleRender_ZTI_I8_D16_POW2(block, 7, 0, v0, v1, v2);
 }
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_256(brp_block *block, ...) {
-    va_list     va;
-    va_start(va, block);
-	TriangleRender_ZTI_I8_D16_POW2(block, 8, 0, va);
-	va_end(va);
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_256(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+    TriangleRender_ZTI_I8_D16_POW2(block, 8, 0, v0, v1, v2);
 }
-void BR_ASM_CALL TriangleRender_ZTI_I8_D16_1024(brp_block *block, ...) {
-    // Not implemented
-    BrAbort();
+void BR_ASM_CALL TriangleRender_ZTI_I8_D16_1024(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
+    TriangleRender_ZTI_I8_D16_POW2(block, 10, 0, v0, v1, v2);
 }

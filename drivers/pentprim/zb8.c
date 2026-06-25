@@ -64,7 +64,7 @@ drawPixel:
     // mov dl,[ebp+2*ecx]
     // ;The following line needs some more experimentation to prove its usefullness in real application
     // mov dh,[ebp+2*ecx+1]
-    edx.short_low = ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val];
+    edx.short_low = DEPTH_READ16(work.depth.base, ebp.v, ecx.v);
     // cmp eax,edx
     // ja noPlot
     if (eax.v > edx.v) {
@@ -72,7 +72,7 @@ drawPixel:
     }
     // ; writes
     // mov [ebp+2*ecx],ax
-    ((uint16_t *)work.depth.base)[ebp.v / 2 + ecx.int_val] = eax.short_low;
+    DEPTH_WRITE16(work.depth.base, ebp.v, ecx.v, eax.short_low);
     // mov [edi+ecx],bl
     ((uint8_t *)work.colour.base)[edi.v + ecx.v] = ebx.l;
 noPlot:
@@ -142,17 +142,7 @@ lineDrawn:
     }
 }
 
-void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, ...) {
-    brp_vertex *v0;
-    brp_vertex *v1;
-    brp_vertex *v2;
-    va_list     va;
-    va_start(va, block);
-    v0 = va_arg(va, brp_vertex *);
-    v1 = va_arg(va, brp_vertex *);
-    v2 = va_arg(va, brp_vertex *);
-    va_end(va);
-
+void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, brp_vertex *v0, brp_vertex *v1,brp_vertex *v2) {
     workspace.v0 = v0;
     workspace.v1 = v1;
     workspace.v2 = v2;
@@ -235,7 +225,7 @@ void BR_ASM_CALL TriangleRender_Z_I8_D16(brp_block *block, ...) {
     // mov edx,workspace.d_z_x
     edx.v = workspace.d_z_x;
     // cmp edx,80000000
-    CMP(edx.v, 80000000);
+    CMP(edx.v, 0x80000000);
     // adc edx,-1
     ADC(edx.v, -1);
     // ror edx,16

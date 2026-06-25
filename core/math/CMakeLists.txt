@@ -1,13 +1,13 @@
-project(math)
+﻿project(math C)
 
 target_include_directories(brender-inc INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/brender>
         )
 
 target_include_directories(brender-inc-ddi INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ddi>
-        $<INSTALL_INTERFACE:ddi>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/brender/ddi>
         )
 
 set(DDI_FILES
@@ -52,6 +52,6 @@ target_compile_definitions(math PRIVATE __BR_V1DB__=0)
 target_link_libraries(math PRIVATE brender-inc-ddi)
 
 find_library(math_library m)
-if (math_library)
+if(math_library)
     target_link_libraries(math PUBLIC ${math_library})
-endif ()
+endif()
