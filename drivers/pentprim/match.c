@@ -705,6 +705,39 @@ br_error BR_CMETHOD_DECL(br_primitive_state_soft, renderEnd)(
 	return BRE_OK;
 }
 
+#ifdef __DREAMCAST__
+/*
+ * Dreamcast hardware 3D bridge.
+ *
+ * Instead of software-rasterising the triangle, hand its already projected
+ * screen-space vertices to the PowerVR (DCPVR3D_AddTri lives in the harness
+ * dc_pvr platform). BRender has already transformed, lit and clipped these
+ * vertices, so the GPU only has to fill them. This replaces the per-pixel
+ * x86emu rasterisers, which is the main Dreamcast speed-up.
+ */
+extern void DCPVR3D_AddTri(
+    float x0, float y0, float z0, unsigned int c0,
+    float x1, float y1, float z1, unsigned int c1,
+    float x2, float y2, float z2, unsigned int c2);
+
+static unsigned int dc_vertex_colour(brp_vertex *v)
+{
+    int g = (int)(v->comp_f[C_I] * 255.0f);
+    if (g < 0) g = 0;
+    if (g > 255) g = 255;
+    return 0xFF000000u | ((unsigned int)g << 16) | ((unsigned int)g << 8) | (unsigned int)g;
+}
+
+void BR_ASM_CALL TriangleRender_PVR(brp_block *block, brp_vertex *v0, brp_vertex *v1, brp_vertex *v2)
+{
+    (void)block;
+    DCPVR3D_AddTri(
+        v0->comp_f[C_SX], v0->comp_f[C_SY], v0->comp_f[C_Q], dc_vertex_colour(v0),
+        v1->comp_f[C_SX], v1->comp_f[C_SY], v1->comp_f[C_Q], dc_vertex_colour(v1),
+        v2->comp_f[C_SX], v2->comp_f[C_SY], v2->comp_f[C_Q], dc_vertex_colour(v2));
+}
+#endif
+
 /*
  * Thunk that loads a renderer from a DLL
  *
@@ -720,6 +753,13 @@ void BR_ASM_CALL RenderAutoloadThunk(brp_block *block, brp_vertex *v0, brp_verte
 
 	ASSERT(pb->image_name);
 	ASSERT(pb->entry_info);
+
+#ifdef __DREAMCAST__
+	/* Route every triangle to the PowerVR instead of the software rasteriser. */
+	pb->p.render = (brp_render_fn *)TriangleRender_PVR;
+	TriangleRender_PVR(block, v0, v1, v2);
+	return;
+#endif
 
 	/*
 	 * Assume the worst - if no renderer is found - use dummy
@@ -797,6 +837,13 @@ void BR_ASM_CALL GenericAutoloadThunk(brp_block *block, brp_vertex *v0, brp_vert
 
 	ASSERT(pb->image_name);
 	ASSERT(pb->entry_info);
+
+#ifdef __DREAMCAST__
+	/* Route every triangle to the PowerVR instead of the software rasteriser. */
+	pb->p.render = (brp_render_fn *)TriangleRender_PVR;
+	TriangleRender_PVR(block, v0, v1, v2);
+	return;
+#endif
 
 	/*
 	 * Assume the worst - if no renderer is found - use dummy

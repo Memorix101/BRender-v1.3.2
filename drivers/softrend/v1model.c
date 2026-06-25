@@ -438,6 +438,132 @@ static void GEOMETRY_CALL V1Face_Outcode(struct br_geometry *self, struct br_ren
 }
 #endif
 
+#ifdef __DREAMCAST__
+/*
+ * Dreamcast hardware path. softrend has already transformed, lit and projected
+ * the face vertices to screen space (comp_f[C_SX/C_SY], 1/w in C_Q, intensity
+ * in C_I). Hand the triangle to the PowerVR (DCPVR3D_AddTri in the harness
+ * dc_pvr platform) instead of running the software fill chain.
+ */
+/* category: 0 = opaque (OP list), 1 = punch-through / index-0 transparent
+ * (PT list), 2 = blended (TR list). */
+extern void DCPVR3D_AddTriTex(
+    float x0, float y0, float z0, float u0, float v0, unsigned int c0,
+    float x1, float y1, float z1, float u1, float v1, unsigned int c1,
+    float x2, float y2, float z2, float u2, float v2, unsigned int c2,
+    int texid, int category);
+extern int DCPVR3D_RegisterTexture(void *pixels, int w, int h, int stride);
+extern unsigned int DCPVR3D_PaletteColor(int idx);
+/* Implemented in the pentprim driver (dc_pvr_texture.c) - reaches the texture
+ * out of the opaque primitive state. *opaque reports PRIMF_OPAQUE_MAP. */
+extern void *DC_GetCurrentTexture(void *pstate, int *w, int *h, int *stride, int *opaque);
+
+static unsigned int dc_face_colour(brp_vertex *v)
+{
+    int g = (int)(v->comp_f[C_I] * 255.0f);
+    if (g < 0) g = 0;
+    if (g > 255) g = 255;
+    return 0xFF000000u | ((unsigned int)g << 16) | ((unsigned int)g << 8) | (unsigned int)g;
+}
+
+/*
+ * Terminal fill for the Dreamcast. This replaces the pentprim rasteriser
+ * (rend.block->render, the leaf of the prim-block chain) rather than bypassing
+ * the chain at the per-face entry. By the time control reaches here softrend has
+ * already run the full chain - clip, per-surface constant evaluation and
+ * texture mapping - so the vertices carry final clipped screen coordinates
+ * (C_SX/C_SY), positive view-space W and mapped texture coordinates in C_U/C_V.
+ *
+ * The mapped U/V are in rasteriser range, i.e. the normalised 0..1 surface
+ * coordinate scaled by comp_scales[] and biased by comp_offsets[] (see the SCALE
+ * macros in lightmac.h). We undo that here to recover the 0..1 UV the PowerVR
+ * wants. fp_eqn and tfp are NULL at this stage (the clipper passes NULL), so we
+ * must not touch them.
+ */
+static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
+    brp_vertex *v0, brp_vertex *v1, brp_vertex *v2,
+    br_uint_16 *fp_vertices, br_uint_16 *fp_edges,
+    br_vector4 *fp_eqn, struct temp_face *tfp)
+{
+    float wa = v0->comp_f[C_W];
+    float wb = v1->comp_f[C_W];
+    float wc = v2->comp_f[C_W];
+
+    /* Clipping guarantees W > 0, but guard against degenerate input anyway so a
+     * stray 1/w cannot feed the PowerVR garbage depth. */
+    if (wa <= 1e-6f || wb <= 1e-6f || wc <= 1e-6f) {
+        return;
+    }
+
+    int texid = -1;
+    int tw, th, ts, topaque = 1;
+    float u0 = 0.f, v0v = 0.f, u1 = 0.f, v1v = 0.f, u2 = 0.f, v2v = 0.f;
+    void *tpix = DC_GetCurrentTexture(rend.renderer->state.pstate, &tw, &th, &ts, &topaque);
+    if (tpix != NULL) {
+        float us = rend.renderer->state.cache.comp_scales[C_U];
+        float vs = rend.renderer->state.cache.comp_scales[C_V];
+        float uo = rend.renderer->state.cache.comp_offsets[C_U];
+        float vo = rend.renderer->state.cache.comp_offsets[C_V];
+
+        texid = DCPVR3D_RegisterTexture(tpix, tw, th, ts);
+
+        if (us != 0.f && vs != 0.f) {
+            u0 = (v0->comp_f[C_U] - uo) / us;
+            v0v = (v0->comp_f[C_V] - vo) / vs;
+            u1 = (v1->comp_f[C_U] - uo) / us;
+            v1v = (v1->comp_f[C_V] - vo) / vs;
+            u2 = (v2->comp_f[C_U] - uo) / us;
+            v2v = (v2->comp_f[C_V] - vo) / vs;
+        }
+    }
+
+    /* Vertex colour. Textured surfaces modulate the texture by intensity (white
+     * = full brightness). Untextured flat/gouraud surfaces have no texture, and
+     * here comp_f[C_I] is already the final shade-ramp palette index, so the real
+     * surface colour comes straight from the palette - using dc_face_colour (which
+     * treats C_I as 0..1) would clamp it to white. */
+    unsigned int c0, c1, c2;
+    if (texid >= 0) {
+        c0 = dc_face_colour(v0);
+        c1 = dc_face_colour(v1);
+        c2 = dc_face_colour(v2);
+    } else {
+        c0 = DCPVR3D_PaletteColor((int)(v0->comp_f[C_I] + 0.5f));
+        c1 = DCPVR3D_PaletteColor((int)(v1->comp_f[C_I] + 0.5f));
+        c2 = DCPVR3D_PaletteColor((int)(v2->comp_f[C_I] + 0.5f));
+    }
+
+    /* Pick the PowerVR list for this triangle:
+     *  2 = blended  -> translucent list (shadows/skidmarks/shaded overlays blend
+     *      over the road instead of z-fighting it); surface opacity -> alpha.
+     *  1 = textured with a non-opaque map -> punch-through list, so colour index
+     *      0 is keyed out (the transparent parts of fences, signs, etc).
+     *  0 = everything else -> opaque list. */
+    int category;
+    if (rend.block->flags & BR_PRIMF_BLENDED) {
+        category = 2;
+        int a = (int)(rend.renderer->state.surface.opacity * 255.0f);
+        if (a < 0) a = 0;
+        if (a > 255) a = 255;
+        unsigned int am = (unsigned int)a << 24;
+        c0 = (c0 & 0x00FFFFFFu) | am;
+        c1 = (c1 & 0x00FFFFFFu) | am;
+        c2 = (c2 & 0x00FFFFFFu) | am;
+    } else if (texid >= 0 && !topaque) {
+        category = 1;
+    } else {
+        category = 0;
+    }
+
+    /* PowerVR depth is 1/w (larger = nearer). */
+    DCPVR3D_AddTriTex(
+        v0->comp_f[C_SX], v0->comp_f[C_SY], 1.0f / wa, u0, v0v, c0,
+        v1->comp_f[C_SX], v1->comp_f[C_SY], 1.0f / wb, u1, v1v, c1,
+        v2->comp_f[C_SX], v2->comp_f[C_SY], 1.0f / wc, u2, v2v, c2,
+        texid, category);
+}
+#endif
+
 #ifndef V1Face_Render
 static void GEOMETRY_CALL V1Face_Render(struct br_geometry *self, struct br_renderer *renderer)
 {
@@ -497,15 +623,18 @@ void GEOMETRY_CALL V1Face_OS_Render(struct br_geometry *self, struct br_renderer
 
 			rend.current_index = f;
 
-#if 1
 			unclipped->render(unclipped,
 				rend.temp_vertices+(*fp_vertices)[0],
 				rend.temp_vertices+(*fp_vertices)[1],
 				rend.temp_vertices+(*fp_vertices)[2],
+<<<<<<< Updated upstream
 				fp_vertices, fp_edges, fp_eqn, tfp);
 
 			//return;
 #endif
+=======
+				(br_uint_16 *)fp_vertices, (br_uint_16 *)fp_edges, fp_eqn, tfp);
+>>>>>>> Stashed changes
 		}
 	}
 }
@@ -959,6 +1088,19 @@ static br_error V1Model_Render
 			ModelToViewportUpdate();
 		}
 #endif
+#ifdef __DREAMCAST__
+		/*
+		 * Dreamcast hardware path. The leaf of the prim-block chain is the
+		 * pentprim rasteriser, which is x86 assembly and cannot run on the SH4.
+		 * Redirect it to our PowerVR terminal fill. Everything ahead of it -
+		 * culling, transform, clip, surface evaluation, texture mapping - is
+		 * portable C and runs unchanged, so the fill receives fully processed,
+		 * clipped, correctly-mapped triangles. Set per group because
+		 * PrimitiveStateRenderBegin re-arms rend.block->render each time.
+		 */
+		rend.block->render = dc_triangle_fill;
+#endif
+
 		/*
 		 * Invoke the current set of renderer functions on the group
 		 */

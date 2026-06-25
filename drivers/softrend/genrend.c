@@ -15,6 +15,27 @@
 
 #include "vecifns.h"
 
+#ifdef __DREAMCAST__
+/* sh4zam: use the SH4's hardware 4x4 matrix register (XMTRX) and FTRV to do the
+ * per-vertex model-to-screen transform in one instruction instead of twelve
+ * scalar multiply-adds. The matrix is loaded into XMTRX once per vertex batch.
+ *
+ * Layout: BRender computes out[c] = sum_k src[k]*m[k][c] (src.w = 1). br_matrix4
+ * is row-major in memory; loading it column-major into XMTRX (what
+ * shz_xmtrx_load_4x4 does) transposes it, which is exactly the form FTRV needs
+ * to reproduce BRender's result. C_X..C_W are the consecutive vertex components
+ * 1..4, matching br_vector4 v[X..W]. */
+#include <sh4zam/shz_xmtrx.h>
+#include <sh4zam/shz_vector.h>
+
+#define DC_TRANSFORM_VERTEX(dest, src) do {                                  \
+    shz_vec4_t _shz_r = shz_xmtrx_transform_vec4(                            \
+        shz_vec4_init((src)->v[X], (src)->v[Y], (src)->v[Z], 1.0f));         \
+    (dest)->v[X] = _shz_r.x; (dest)->v[Y] = _shz_r.y;                        \
+    (dest)->v[Z] = _shz_r.z; (dest)->v[W] = _shz_r.w;                        \
+} while(0)
+#endif
+
 /*
  * Transform, project, outcode and update screen bounds of visible vertices
  */
@@ -24,13 +45,23 @@ static void GEOMETRY_CALL Vertex_TransformProjectOutcodeBounds(struct br_geometr
 	int v;
 	brp_vertex *tvp = rend.temp_vertices;
 
+#ifdef __DREAMCAST__
+	/* Load the model-to-screen matrix into XMTRX once for the whole batch; the
+	 * per-vertex FTRV below reads it. Nothing in the loop body touches XMTRX. */
+	shz_xmtrx_load_4x4((const shz_mat4x4_t *)&scache.model_to_screen);
+#endif
+
 	if (rend.block->vertex_components & CM_Q)
 		for(v=0; v < rend.nvertices; v++, tvp++) {
 
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
+#ifdef __DREAMCAST__
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
+#else
 			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+#endif
 			OUTCODE_POINT(tvp->flags, (br_vector4 *)(tvp->comp+C_X));
 
 			if(!(tvp->flags & OUTCODES_ALL)) {
@@ -44,7 +75,11 @@ static void GEOMETRY_CALL Vertex_TransformProjectOutcodeBounds(struct br_geometr
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
+#ifdef __DREAMCAST__
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
+#else
 			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+#endif
 			OUTCODE_POINT(tvp->flags, (br_vector4 *)(tvp->comp+C_X));
 
 			if(!(tvp->flags & OUTCODES_ALL)) {

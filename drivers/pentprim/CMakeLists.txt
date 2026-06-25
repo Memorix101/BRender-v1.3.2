@@ -67,6 +67,7 @@ add_prim_suffixed(prim_t8 TRUE)
 set_source_files_properties(${PRIM_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 add_library(pentprim
+<<<<<<< Updated upstream
         awtm.c
         awtmi.h
         awtmz.c
@@ -103,6 +104,45 @@ add_library(pentprim
         sbuffer.h
         template.h
         timestmp.h
+=======
+	dc_pvr_texture.c
+	awtm.c
+	awtmi.h
+	awtmz.c
+	device.c
+	device.h
+	dither.c
+	driver.c
+	drv.h
+	drv_ip.h
+	fperspi.h
+	fperspzi.h
+	frcp.c
+	l_pi.c
+	l_piz.c
+	match.c
+	match.h
+	mmx_ip.h
+	object.c
+	object.h
+	persp.c
+	perspi.h
+	perspz.c
+	perspzi.h
+	plib.c
+	plib.h
+	p_pi.c
+	p_piz.c
+	prim_ip.h
+	pstate.c
+	pstate.h
+	rastparm.h
+	rcp.c
+	sbuffer.c
+	sbuffer.h
+	template.h
+	timestmp.h
+>>>>>>> Stashed changes
 
 		work.c
         work.h

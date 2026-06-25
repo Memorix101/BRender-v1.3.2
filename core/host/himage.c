@@ -110,3 +110,36 @@ void *BR_RESIDENT_ENTRY HostImageLookupOrdinal(void *img, br_uint_32 ordinal)
 }
 
 #endif
+
+#ifdef __DREAMCAST__
+
+/* The Dreamcast build links every driver statically (via BrDevAddStatic), so
+ * there is no dynamic image loading. These return NULL, which BRender treats as
+ * "image not found" and handles gracefully. */
+void *BR_RESIDENT_ENTRY HostImageLoad(char *name)
+{
+    (void)name;
+    return NULL;
+}
+
+void BR_RESIDENT_ENTRY HostImageUnload(void *image)
+{
+    (void)image;
+}
+
+void *BR_RESIDENT_ENTRY HostImageLookupName(void *img, char *name, br_uint_32 hint)
+{
+    (void)img;
+    (void)name;
+    (void)hint;
+    return NULL;
+}
+
+void *BR_RESIDENT_ENTRY HostImageLookupOrdinal(void *img, br_uint_32 ordinal)
+{
+    (void)img;
+    (void)ordinal;
+    return NULL;
+}
+
+#endif
