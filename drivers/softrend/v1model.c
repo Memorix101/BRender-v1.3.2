@@ -583,6 +583,16 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
             extern int g3d_diag_texfail;
             g3d_diag_texfail++;
         }
+        // Only the textured path needs this: it disables per-vertex shading
+        // (clip-garbage C_I workaround, see dreamcast-pvr-flicker-fix memory)
+        // by leaving the texture's own pixels unmodulated. The untextured
+        // branch below already computes a real, intentional flat colour from
+        // material->index_base and must not have it stomped to white here -
+        // that was clobbering untextured blended decals (e.g. dirt skid
+        // marks, which have no texture asset) to solid white.
+        if (!DC_FEAT_VERTEXCOLOR) {
+            c0 = c1 = c2 = 0xFFFFFFFFu;
+        }
     } else {
         /* No texture: flat-colour the whole face from material->index_base,
          * matching the reference OpenGL renderer's untextured path. See the
@@ -593,10 +603,6 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
         c0 = c1 = c2 = DCPVR3D_PaletteColor(idx);
         extern int g3d_diag_notex;
         g3d_diag_notex++;
-    }
-
-    if (!DC_FEAT_VERTEXCOLOR) {
-        c0 = c1 = c2 = 0xFFFFFFFFu;
     }
 
     /* The car's drop shadow is ProcessShadow() re-rendering the ground directly
