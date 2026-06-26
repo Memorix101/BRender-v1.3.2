@@ -655,9 +655,7 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
      * in graphics.c) a much larger, dedicated bias so they win outright
      * instead of relying on chance. */
     extern int g_dc_in_decal_pass;
-    // Part of the flicker feature-isolation sweep (see DC_FEAT_* in dc_pvr.c):
-    // off here as part of the all-off baseline.
-#define DC_FEAT_DEDICATED_BIAS 0
+#define DC_FEAT_DEDICATED_BIAS 1
     float zbias = (DC_FEAT_DEDICATED_BIAS && (g_dc_in_shadow_pass || g_dc_in_decal_pass)) ? 1.0005f : 1.0f;
     DCPVR3D_AddTriTex(
         v0->comp_f[C_SX], v0->comp_f[C_SY], zbias / wa, u0, v0v, c0,
