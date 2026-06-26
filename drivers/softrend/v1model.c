@@ -457,6 +457,7 @@ extern unsigned int DCPVR3D_PaletteColor(int idx);
 /* Implemented in the pentprim driver (dc_pvr_texture.c) - reaches the texture
  * out of the opaque primitive state. *opaque reports PRIMF_OPAQUE_MAP. */
 extern void *DC_GetCurrentTexture(void *pstate, int *w, int *h, int *stride, int *opaque);
+extern void *DC_GetCurrentIndexShade(void *pstate, int *w, int *h, int *stride);
 
 static unsigned int dc_face_colour(brp_vertex *v)
 {
@@ -480,6 +481,15 @@ static unsigned int dc_face_colour(brp_vertex *v)
  * wants. fp_eqn and tfp are NULL at this stage (the clipper passes NULL), so we
  * must not touch them.
  */
+// Pipeline teardown switches for the persistent level-geometry flicker
+// investigation (mirrors DC_FEAT_* in dc_pvr.c, which only gates auxiliary
+// optimisations on top of an always-on core path). These gate the core path
+// itself: with both 0, every triangle submitted is flat opaque white with no
+// texture binding at all - pure geometry/depth/raster, nothing else. Build up
+// from there one switch at a time to find which stage the bug first appears in.
+#define DC_FEAT_TEXTURE 1
+#define DC_FEAT_VERTEXCOLOR 0
+
 static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
     brp_vertex *v0, brp_vertex *v1, brp_vertex *v2,
     br_uint_16 *fp_vertices, br_uint_16 *fp_edges,
@@ -492,13 +502,39 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
     /* Clipping guarantees W > 0, but guard against degenerate input anyway so a
      * stray 1/w cannot feed the PowerVR garbage depth. */
     if (wa <= 1e-6f || wb <= 1e-6f || wc <= 1e-6f) {
+        extern int g3d_diag_degenw;
+        g3d_diag_degenw++;
         return;
+    }
+
+    {
+        extern float g3d_diag_minw;
+        float wmin = (wa < wb) ? wa : wb;
+        if (wc < wmin) wmin = wc;
+        if (wmin < g3d_diag_minw) g3d_diag_minw = wmin;
+    }
+
+    /* Diagnostic only (no effect on rendering): does comp_scales/offsets[C_I]
+     * vary per material (consistent with material->index_base/index_range
+     * being baked in, as the BRender material struct's "direct index ramp"
+     * comment implies) or stay constant (e.g. lighting.c's generic 256/0)?
+     * Settles which theory about the rainbow-coloured untextured shading is
+     * right before changing the formula again. */
+    {
+        extern float g3d_diag_iscale_min, g3d_diag_iscale_max;
+        extern float g3d_diag_ioffset_min, g3d_diag_ioffset_max;
+        float is_ = rend.renderer->state.cache.comp_scales[C_I];
+        float io = rend.renderer->state.cache.comp_offsets[C_I];
+        if (is_ < g3d_diag_iscale_min) g3d_diag_iscale_min = is_;
+        if (is_ > g3d_diag_iscale_max) g3d_diag_iscale_max = is_;
+        if (io < g3d_diag_ioffset_min) g3d_diag_ioffset_min = io;
+        if (io > g3d_diag_ioffset_max) g3d_diag_ioffset_max = io;
     }
 
     int texid = -1;
     int tw, th, ts, topaque = 1;
     float u0 = 0.f, v0v = 0.f, u1 = 0.f, v1v = 0.f, u2 = 0.f, v2v = 0.f;
-    void *tpix = DC_GetCurrentTexture(rend.renderer->state.pstate, &tw, &th, &ts, &topaque);
+    void *tpix = DC_FEAT_TEXTURE ? DC_GetCurrentTexture(rend.renderer->state.pstate, &tw, &th, &ts, &topaque) : NULL;
     if (tpix != NULL) {
         float us = rend.renderer->state.cache.comp_scales[C_U];
         float vs = rend.renderer->state.cache.comp_scales[C_V];
@@ -533,16 +569,56 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
         c0 = dc_face_colour(v0);
         c1 = dc_face_colour(v1);
         c2 = dc_face_colour(v2);
+        {
+            extern float g3d_diag_minI, g3d_diag_maxI;
+            float imin = v0->comp_f[C_I], imax = imin;
+            if (v1->comp_f[C_I] < imin) imin = v1->comp_f[C_I];
+            if (v2->comp_f[C_I] < imin) imin = v2->comp_f[C_I];
+            if (v1->comp_f[C_I] > imax) imax = v1->comp_f[C_I];
+            if (v2->comp_f[C_I] > imax) imax = v2->comp_f[C_I];
+            if (imin < g3d_diag_minI) g3d_diag_minI = imin;
+            if (imax > g3d_diag_maxI) g3d_diag_maxI = imax;
+        }
         if (texid < 0) {
             extern int g3d_diag_texfail;
             g3d_diag_texfail++;
         }
     } else {
-        c0 = DCPVR3D_PaletteColor((int)(v0->comp_f[C_I] + 0.5f));
-        c1 = DCPVR3D_PaletteColor((int)(v1->comp_f[C_I] + 0.5f));
-        c2 = DCPVR3D_PaletteColor((int)(v2->comp_f[C_I] + 0.5f));
+        /* No texture: flat-colour the whole face from material->index_base,
+         * matching the reference OpenGL renderer's untextured path. See the
+         * comment on DC_GetCurrentIndexBase for why this replaced a per-vertex
+         * comp_f[C_I] palette lookup. */
+        extern int DC_GetCurrentIndexBase(void *pstate);
+        int idx = DC_GetCurrentIndexBase(rend.renderer->state.pstate);
+        c0 = c1 = c2 = DCPVR3D_PaletteColor(idx);
         extern int g3d_diag_notex;
         g3d_diag_notex++;
+    }
+
+    if (!DC_FEAT_VERTEXCOLOR) {
+        c0 = c1 = c2 = 0xFFFFFFFFu;
+    }
+
+    /* The car's drop shadow is ProcessShadow() re-rendering the ground directly
+     * underneath a second time, relying on BRender's depth_shade_table being
+     * temporarily pointed at a darker row to do the actual darkening (see
+     * gShadow_dim_amount, graphics.c). We bypass that table entirely above, so
+     * without this the "shadow" comes out at the same (or, since comp_f[C_I]
+     * can exceed 1.0 and clamp to white, brighter) colour as the ground under
+     * it - a light patch instead of a shadow. Approximate the missing
+     * table-driven darkening with a flat multiplier derived from the same
+     * gShadow_dim_amount: it ranges roughly 2.5 (barely darkened) to 7.5
+     * (heavily darkened). */
+    extern int g_dc_in_shadow_pass;
+    if (g_dc_in_shadow_pass) {
+        extern int gShadow_dim_amount;
+        float scale = 1.0f - ((float)(gShadow_dim_amount - 2.5f) / 5.0f) * 0.7f;
+        if (scale < 0.3f) scale = 0.3f;
+        if (scale > 1.0f) scale = 1.0f;
+        unsigned int sc = (unsigned int)(scale * 256.0f);
+        c0 = (c0 & 0xFF000000u) | ((((c0 >> 16 & 0xFF) * sc) >> 8) << 16) | ((((c0 >> 8 & 0xFF) * sc) >> 8) << 8) | (((c0 & 0xFF) * sc) >> 8);
+        c1 = (c1 & 0xFF000000u) | ((((c1 >> 16 & 0xFF) * sc) >> 8) << 16) | ((((c1 >> 8 & 0xFF) * sc) >> 8) << 8) | (((c1 & 0xFF) * sc) >> 8);
+        c2 = (c2 & 0xFF000000u) | ((((c2 >> 16 & 0xFF) * sc) >> 8) << 16) | ((((c2 >> 8 & 0xFF) * sc) >> 8) << 8) | (((c2 & 0xFF) * sc) >> 8);
     }
 
     /* Pick the PowerVR list for this triangle:
@@ -567,11 +643,26 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
         category = 0;
     }
 
-    /* PowerVR depth is 1/w (larger = nearer). */
+    /* PowerVR depth is 1/w (larger = nearer). The shadow pass redraws the same
+     * ground triangle a second time at the exact same depth as the original
+     * (ProcessShadow copies list_ptr->v[0..2] verbatim) - the generic
+     * per-submission-order bias below (DC3D_ZBIAS_PER_TRI) is tuned for
+     * decals that are merely close to the surface they sit on, and is too
+     * small to reliably win this exact-depth tie against floating point
+     * noise from being computed via a separate vertex pass, causing it to
+     * flicker in and out as the camera moves. Give the shadow (and oil spill
+     * stains, which sit on the ground the same way - see g_dc_in_decal_pass
+     * in graphics.c) a much larger, dedicated bias so they win outright
+     * instead of relying on chance. */
+    extern int g_dc_in_decal_pass;
+    // Part of the flicker feature-isolation sweep (see DC_FEAT_* in dc_pvr.c):
+    // off here as part of the all-off baseline.
+#define DC_FEAT_DEDICATED_BIAS 0
+    float zbias = (DC_FEAT_DEDICATED_BIAS && (g_dc_in_shadow_pass || g_dc_in_decal_pass)) ? 1.0005f : 1.0f;
     DCPVR3D_AddTriTex(
-        v0->comp_f[C_SX], v0->comp_f[C_SY], 1.0f / wa, u0, v0v, c0,
-        v1->comp_f[C_SX], v1->comp_f[C_SY], 1.0f / wb, u1, v1v, c1,
-        v2->comp_f[C_SX], v2->comp_f[C_SY], 1.0f / wc, u2, v2v, c2,
+        v0->comp_f[C_SX], v0->comp_f[C_SY], zbias / wa, u0, v0v, c0,
+        v1->comp_f[C_SX], v1->comp_f[C_SY], zbias / wb, u1, v1v, c1,
+        v2->comp_f[C_SX], v2->comp_f[C_SY], zbias / wc, u2, v2v, c2,
         texid, category);
 }
 #endif

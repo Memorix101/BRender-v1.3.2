@@ -52,4 +52,70 @@ void *DC_GetCurrentTexture(void *pstate_v, int *width, int *height, int *stride,
     return bs->buffer.base;
 }
 
+/* Mirrors DC_GetCurrentTexture, but for the material's index_shade table - a
+ * per-material shade ramp (br_material::index_shade) that maps a lighting
+ * intensity row to the actual final palette index for that material's own
+ * colour. Untextured surfaces' comp_f[C_I] (after CLAMP_SCALE in lightmac.h)
+ * lands in [index_base, index_base+index_range), which is a row into this
+ * table, not a usable palette index by itself - using it as a palette index
+ * directly scatters every material's shading across whatever unrelated colours
+ * happen to live at that material's index_base in the global palette, instead
+ * of that material's own ramp. Returns NULL when there is no shade table bound
+ * (the caller should fall back to treating comp_f[C_I] as a direct index).
+ */
+void *DC_GetCurrentIndexShade(void *pstate_v, int *width, int *height, int *stride)
+{
+    struct br_primitive_state *ps = (struct br_primitive_state *)pstate_v;
+    struct br_buffer_stored *bs;
+
+    if (ps == NULL) {
+        return NULL;
+    }
+    bs = ps->prim.index_shade.buffer;
+    if (bs == NULL || bs->buffer.base == NULL) {
+        return NULL;
+    }
+    *width = (int)bs->buffer.width_p;
+    *height = (int)bs->buffer.height;
+    *stride = (int)bs->buffer.stride_b;
+    return bs->buffer.base;
+}
+
+/* Untextured materials have no per-vertex shading at all in BRender's own
+ * reference behaviour (confirmed against the project's OpenGL renderer,
+ * gl_renderer.c's setActiveMaterial(): a material with no colour_map renders
+ * the whole face as a single flat palette colour, material->index_base,
+ * regardless of per-vertex lighting). comp_f[C_I] is still a valid value in
+ * that case (it is the material's own shade-ramp index, offset by lighting),
+ * but using it per-vertex puts the engine in unphysical territory the
+ * reference renderer never visits, and after near-plane clip interpolation
+ * (camera rotation is exactly when clipping geometry changes) it can land far
+ * outside that shade ramp - the symptom seen on Dreamcast was per-vertex
+ * rainbow colouring on level geometry as the camera rotated. Going through
+ * index_base directly instead of comp_f[C_I] sidesteps that interpolation
+ * entirely by never depending on a per-vertex varying value for colour. */
+int DC_GetCurrentIndexBase(void *pstate_v)
+{
+    struct br_primitive_state *ps = (struct br_primitive_state *)pstate_v;
+
+    if (ps == NULL) {
+        return 0;
+    }
+    return (int)ps->prim.index_base;
+}
+
+/* Set by graphics.c around ProcessShadow's BrZbSceneRenderAdd(gShadow_actor)
+ * call: the car's drop shadow is a second re-render of the ground directly
+ * under the car, darkened on PC by temporarily pointing BRender's lighting
+ * ramp at a darker row. dc_triangle_fill bypasses that ramp entirely, so it
+ * needs to know when to darken its own output instead. */
+int g_dc_in_shadow_pass;
+
+/* Set by graphics.c around the oil-spill BrZbSceneRenderAdd(oily_actor) call:
+ * oil stains sit coplanar on the ground exactly like the car's shadow, and
+ * need the same dedicated depth bias (dc_triangle_fill) to stop popping in
+ * and out as the camera moves - but their own material colour is already
+ * correct, so unlike g_dc_in_shadow_pass this doesn't also trigger darkening. */
+int g_dc_in_decal_pass;
+
 #endif
