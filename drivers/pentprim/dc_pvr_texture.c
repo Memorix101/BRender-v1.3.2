@@ -81,6 +81,36 @@ void *DC_GetCurrentIndexShade(void *pstate_v, int *width, int *height, int *stri
     return bs->buffer.base;
 }
 
+/* Mirrors DC_GetCurrentIndexShade, but for index_blend - the table a
+ * BR_PRIMF_BLENDED primitive (smoke, shaded overlays) uses to combine its
+ * output with what is already on screen. For smoke this is one of the
+ * generated shade tables (GenerateShadeTable in spark.c), whose columns are
+ * source palette indices and whose rows tint toward a fixed reference colour
+ * (black/dark-grey/grey) by an amount that increases down the rows. The last
+ * row converges to (a palette match of) that reference colour for every
+ * column, so reading any cell of the last row and looking up its palette RGB
+ * recovers the smoke's intended tint colour - which is what the PowerVR
+ * bridge needs to approximate the blend with a flat translucent quad, instead
+ * of the material's index_base (which for smoke is a shade-ramp row, not the
+ * tint colour). Returns NULL when no blend table is bound. */
+void *DC_GetCurrentIndexBlend(void *pstate_v, int *width, int *height, int *stride)
+{
+    struct br_primitive_state *ps = (struct br_primitive_state *)pstate_v;
+    struct br_buffer_stored *bs;
+
+    if (ps == NULL) {
+        return NULL;
+    }
+    bs = ps->prim.index_blend.buffer;
+    if (bs == NULL || bs->buffer.base == NULL) {
+        return NULL;
+    }
+    *width = (int)bs->buffer.width_p;
+    *height = (int)bs->buffer.height;
+    *stride = (int)bs->buffer.stride_b;
+    return bs->buffer.base;
+}
+
 /* Untextured materials have no per-vertex shading at all in BRender's own
  * reference behaviour (confirmed against the project's OpenGL renderer,
  * gl_renderer.c's setActiveMaterial(): a material with no colour_map renders

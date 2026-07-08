@@ -855,6 +855,23 @@ br_int_32 GenerateSurfaceFunctions(br_renderer *self, surface_fn **fns, br_uint_
 	br_int_32 f = 0;
 	br_matrix23 *m;
 
+	int surf_lit = self->state.surface.lighting;
+#if defined(__DREAMCAST__)
+/* Skip per-vertex lighting on the Dreamcast. The hardware path (dc_triangle_fill
+ * in v1model.c) discards the per-vertex lit colour and intensity entirely -
+ * textured faces draw the texture unmodulated (white), untextured faces use the
+ * material's flat index_base - so the per-vertex, per-light accumulation the Lit
+ * surface functions do is pure wasted work (it was the dominant slice of the CPU
+ * "walk" in profiling). Forcing the cheap Unlit surface functions instead skips
+ * that light loop with no visual change on DC, while the UV (SurfaceMap*)
+ * functions above still run so textures map correctly. Flag it so it is a
+ * one-line revert if anything unexpectedly depends on the lit colour. */
+#define DC_FEAT_SKIP_LIGHTING 1
+#if DC_FEAT_SKIP_LIGHTING
+	surf_lit = 0;
+#endif
+#endif
+
 	/* U,V
 	 */
 	if(mask & (CM_U|CM_V)) {
@@ -938,7 +955,7 @@ br_int_32 GenerateSurfaceFunctions(br_renderer *self, surface_fn **fns, br_uint_
 	/* I
 	 */
 	if(mask & CM_I) {
-		if(self->state.surface.lighting) {
+		if(surf_lit) {
 			fns[f++] = SurfaceIndexLit;
 		} else if(self->state.surface.colour_source == BRT_GEOMETRY) {
 			fns[f++] = SurfaceIndexUnlit;
@@ -959,7 +976,7 @@ br_int_32 GenerateSurfaceFunctions(br_renderer *self, surface_fn **fns, br_uint_
 	/* RGB
 	 */
 	if(mask & (CM_R|CM_G|CM_B)) {
-		if(self->state.surface.lighting)
+		if(surf_lit)
 			if (self->state.surface.prelighting)
 				fns[f++] = SurfaceColourLitPrelit;
 			else

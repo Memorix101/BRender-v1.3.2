@@ -439,6 +439,7 @@ static void GEOMETRY_CALL V1Face_Outcode(struct br_geometry *self, struct br_ren
 #endif
 
 #ifdef __DREAMCAST__
+#include <stdio.h>
 /*
  * Dreamcast hardware path. softrend has already transformed, lit and projected
  * the face vertices to screen space (comp_f[C_SX/C_SY], 1/w in C_Q, intensity
@@ -458,6 +459,7 @@ extern unsigned int DCPVR3D_PaletteColor(int idx);
  * out of the opaque primitive state. *opaque reports PRIMF_OPAQUE_MAP. */
 extern void *DC_GetCurrentTexture(void *pstate, int *w, int *h, int *stride, int *opaque);
 extern void *DC_GetCurrentIndexShade(void *pstate, int *w, int *h, int *stride);
+extern void *DC_GetCurrentIndexBlend(void *pstate, int *w, int *h, int *stride);
 
 static unsigned int dc_face_colour(brp_vertex *v)
 {
@@ -490,6 +492,24 @@ static unsigned int dc_face_colour(brp_vertex *v)
 #define DC_FEAT_TEXTURE 1
 #define DC_FEAT_VERTEXCOLOR 0
 
+// Flat hardware alpha (0..255) used to approximate a textured blended sprite's
+// index_blend table (smoke, splashes) on the PowerVR, which can't do the
+// table's per-texel dependent blend. 128 ~= BLEND50.TAB's 50% mix. Tune here.
+#define DC_BLEND_TEXTURED_ALPHA 128
+
+// Blend-table bake (smoke/dust) - dead end, left off: see DCPVR3D_ArmRemapLut.
+// Baking against one fixed background index returns the source unchanged.
+#define DC_FEAT_BLEND_BAKE 0
+
+// Shade-table bake for non-opaque textured sprites - turned OFF: it broke more
+// than it fixed. It did NOT touch the flames (they have no index_shade) but DID
+// bake other non-opaque textured surfaces that do (cars), flattening their
+// per-vertex shading and turning index-0 texels transparent - cars went
+// see-through. So the flame rainbow is NOT an index_shade remap, and gating on
+// !topaque is far too broad. Left flagged off.
+#define DC_FEAT_SHADE_BAKE 0
+#define DC_SHADE_BAKE_ROW_BIAS 0
+
 static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
     brp_vertex *v0, brp_vertex *v1, brp_vertex *v2,
     br_uint_16 *fp_vertices, br_uint_16 *fp_edges,
@@ -502,33 +522,7 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
     /* Clipping guarantees W > 0, but guard against degenerate input anyway so a
      * stray 1/w cannot feed the PowerVR garbage depth. */
     if (wa <= 1e-6f || wb <= 1e-6f || wc <= 1e-6f) {
-        extern int g3d_diag_degenw;
-        g3d_diag_degenw++;
         return;
-    }
-
-    {
-        extern float g3d_diag_minw;
-        float wmin = (wa < wb) ? wa : wb;
-        if (wc < wmin) wmin = wc;
-        if (wmin < g3d_diag_minw) g3d_diag_minw = wmin;
-    }
-
-    /* Diagnostic only (no effect on rendering): does comp_scales/offsets[C_I]
-     * vary per material (consistent with material->index_base/index_range
-     * being baked in, as the BRender material struct's "direct index ramp"
-     * comment implies) or stay constant (e.g. lighting.c's generic 256/0)?
-     * Settles which theory about the rainbow-coloured untextured shading is
-     * right before changing the formula again. */
-    {
-        extern float g3d_diag_iscale_min, g3d_diag_iscale_max;
-        extern float g3d_diag_ioffset_min, g3d_diag_ioffset_max;
-        float is_ = rend.renderer->state.cache.comp_scales[C_I];
-        float io = rend.renderer->state.cache.comp_offsets[C_I];
-        if (is_ < g3d_diag_iscale_min) g3d_diag_iscale_min = is_;
-        if (is_ > g3d_diag_iscale_max) g3d_diag_iscale_max = is_;
-        if (io < g3d_diag_ioffset_min) g3d_diag_ioffset_min = io;
-        if (io > g3d_diag_ioffset_max) g3d_diag_ioffset_max = io;
     }
 
     int texid = -1;
@@ -541,15 +535,54 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
         float uo = rend.renderer->state.cache.comp_offsets[C_U];
         float vo = rend.renderer->state.cache.comp_offsets[C_V];
 
+        /* Non-opaque textured effect sprites (flames) store index_shade SOURCE
+         * indices as their texels, not displayable colours - softrend maps them
+         * through shade_table[intensity*256 + texel] (fti8pizp.c), which turns
+         * e.g. a flame texel into its actual fire colour. DC otherwise draws the
+         * raw index (rainbow). Bake the texels through the shade table at the
+         * face's representative intensity row at registration. Only for
+         * non-opaque sprites so opaque world geometry is untouched. */
+#if DC_FEAT_SHADE_BAKE
+        int armed_bake = 0;
+        if (!topaque) {
+            extern void DCPVR3D_ArmRemapLut(const void *table, int stride, int row);
+            int sw = 0, sh = 0, sstr = 0;
+            void *stab = DC_GetCurrentIndexShade(rend.renderer->state.pstate, &sw, &sh, &sstr);
+            if (stab != NULL && sh > 1) {
+                /* Representative intensity -> shade table row. comp_f[C_I] on a
+                 * textured face is a 0..1 brightness; map it into the table's
+                 * row range. Tunable via DC_SHADE_BAKE_ROW_BIAS. */
+                float ii = v0->comp_f[C_I];
+                if (ii < 0.f) ii = 0.f;
+                if (ii > 1.f) ii = 1.f;
+                int row = (int)(ii * (float)(sh - 1) + 0.5f) + DC_SHADE_BAKE_ROW_BIAS;
+                if (row < 0) row = 0;
+                if (row > sh - 1) row = sh - 1;
+                DCPVR3D_ArmRemapLut(stab, sstr, row);
+                armed_bake = 1;
+            }
+        }
+#endif
         texid = DCPVR3D_RegisterTexture(tpix, tw, th, ts);
+#if DC_FEAT_SHADE_BAKE
+        if (armed_bake) {
+            extern void DCPVR3D_DisarmBlendLut(void);
+            DCPVR3D_DisarmBlendLut();
+        }
+#endif
 
         if (us != 0.f && vs != 0.f) {
-            u0 = (v0->comp_f[C_U] - uo) / us;
-            v0v = (v0->comp_f[C_V] - vo) / vs;
-            u1 = (v1->comp_f[C_U] - uo) / us;
-            v1v = (v1->comp_f[C_V] - vo) / vs;
-            u2 = (v2->comp_f[C_U] - uo) / us;
-            v2v = (v2->comp_f[C_V] - vo) / vs;
+            /* One reciprocal per axis instead of a divide per vertex: 2 divides
+             * plus 6 multiplies rather than 6 divides (divides are slow on the
+             * SH4, and this runs for every textured triangle). */
+            float inv_us = 1.0f / us;
+            float inv_vs = 1.0f / vs;
+            u0 = (v0->comp_f[C_U] - uo) * inv_us;
+            v0v = (v0->comp_f[C_V] - vo) * inv_vs;
+            u1 = (v1->comp_f[C_U] - uo) * inv_us;
+            v1v = (v1->comp_f[C_V] - vo) * inv_vs;
+            u2 = (v2->comp_f[C_U] - uo) * inv_us;
+            v2v = (v2->comp_f[C_V] - vo) * inv_vs;
         }
     }
 
@@ -566,31 +599,16 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
      * white. */
     unsigned int c0, c1, c2;
     if (tpix != NULL) {
-        c0 = dc_face_colour(v0);
-        c1 = dc_face_colour(v1);
-        c2 = dc_face_colour(v2);
-        {
-            extern float g3d_diag_minI, g3d_diag_maxI;
-            float imin = v0->comp_f[C_I], imax = imin;
-            if (v1->comp_f[C_I] < imin) imin = v1->comp_f[C_I];
-            if (v2->comp_f[C_I] < imin) imin = v2->comp_f[C_I];
-            if (v1->comp_f[C_I] > imax) imax = v1->comp_f[C_I];
-            if (v2->comp_f[C_I] > imax) imax = v2->comp_f[C_I];
-            if (imin < g3d_diag_minI) g3d_diag_minI = imin;
-            if (imax > g3d_diag_maxI) g3d_diag_maxI = imax;
-        }
-        if (texid < 0) {
-            extern int g3d_diag_texfail;
-            g3d_diag_texfail++;
-        }
-        // Only the textured path needs this: it disables per-vertex shading
-        // (clip-garbage C_I workaround, see dreamcast-pvr-flicker-fix memory)
-        // by leaving the texture's own pixels unmodulated. The untextured
-        // branch below already computes a real, intentional flat colour from
-        // material->index_base and must not have it stomped to white here -
-        // that was clobbering untextured blended decals (e.g. dirt skid
-        // marks, which have no texture asset) to solid white.
-        if (!DC_FEAT_VERTEXCOLOR) {
+        // Textured surfaces modulate the texture by intensity when
+        // DC_FEAT_VERTEXCOLOR is on; with it off (the clip-garbage C_I
+        // workaround, see dreamcast-pvr-flicker-fix memory) the texture is
+        // drawn unmodulated (white), so skip computing the per-vertex colour
+        // entirely rather than compute it and immediately overwrite it.
+        if (DC_FEAT_VERTEXCOLOR) {
+            c0 = dc_face_colour(v0);
+            c1 = dc_face_colour(v1);
+            c2 = dc_face_colour(v2);
+        } else {
             c0 = c1 = c2 = 0xFFFFFFFFu;
         }
     } else {
@@ -601,8 +619,6 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
         extern int DC_GetCurrentIndexBase(void *pstate);
         int idx = DC_GetCurrentIndexBase(rend.renderer->state.pstate);
         c0 = c1 = c2 = DCPVR3D_PaletteColor(idx);
-        extern int g3d_diag_notex;
-        g3d_diag_notex++;
     }
 
     /* The car's drop shadow is ProcessShadow() re-rendering the ground directly
@@ -636,9 +652,30 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
     int category;
     if (rend.block->flags & BR_PRIMF_BLENDED) {
         category = 2;
-        int a = (int)(rend.renderer->state.surface.opacity * 255.0f);
-        if (a < 0) a = 0;
-        if (a > 255) a = 255;
+        int a;
+        if (tpix != NULL) {
+            /* Textured blended sprites (smoke, water/oil splashes) carry their
+             * translucency in a 256x256 index_blend table (BLEND50.TAB and
+             * friends, loaded in spark.c), NOT in surface.opacity - which stays
+             * 1.0 for them. The table does out = blend[dest*256 + src], a
+             * per-texel dependent-texture blend the PowerVR can't reproduce
+             * cheaply, so drawing the raw texture at opacity 1.0 (as before)
+             * put an opaque block on screen - the "blue smoke block" symptom,
+             * where the smoke's own source index just happened to map to a dark
+             * blue in that level's palette. Approximate the blend with a flat
+             * hardware alpha instead: BLEND50 is a 50% mix, so half alpha turns
+             * the block back into a translucent haze. (BLEND25/75 exist too but
+             * 50% is the common one and a good enough single value; can be
+             * refined per-table later if needed.) */
+            a = DC_BLEND_TEXTURED_ALPHA;
+        } else {
+            /* Untextured blended geometry (car shadow, skid marks, shaded
+             * ground overlays) really does drive its translucency from
+             * surface.opacity, so keep honouring it here. */
+            a = (int)(rend.renderer->state.surface.opacity * 255.0f);
+            if (a < 0) a = 0;
+            if (a > 255) a = 255;
+        }
         unsigned int am = (unsigned int)a << 24;
         c0 = (c0 & 0x00FFFFFFu) | am;
         c1 = (c1 & 0x00FFFFFFu) | am;

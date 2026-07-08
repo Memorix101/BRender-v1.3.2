@@ -28,12 +28,45 @@
 #include <sh4zam/shz_xmtrx.h>
 #include <sh4zam/shz_vector.h>
 
+/* Master switch for the sh4zam per-vertex transform in the pure (no per-vertex
+ * lighting) transform functions below. Set to 0 to fall straight back to the
+ * scalar path everywhere - a one-line revert if anything regresses. Only the
+ * functions with NO lighting in their loop are converted: the lit ones
+ * (*Surf/*Geom, which call renderer->state.cache.vertex_fns[] per vertex)
+ * are left scalar because arbitrary lighting code in the loop could clobber
+ * XMTRX between the load and the FTRV. */
+#define DC_FEAT_SH4ZAM_XFORM 1
+
+#if DC_FEAT_SH4ZAM_XFORM
+/* Load the model-to-screen matrix into XMTRX once, before a transform loop. */
+#define DC_LOAD_XMTRX() shz_xmtrx_load_4x4((const shz_mat4x4_t *)&scache.model_to_screen)
 #define DC_TRANSFORM_VERTEX(dest, src) do {                                  \
     shz_vec4_t _shz_r = shz_xmtrx_transform_vec4(                            \
         shz_vec4_init((src)->v[X], (src)->v[Y], (src)->v[Z], 1.0f));         \
     (dest)->v[X] = _shz_r.x; (dest)->v[Y] = _shz_r.y;                        \
     (dest)->v[Z] = _shz_r.z; (dest)->v[W] = _shz_r.w;                        \
 } while(0)
+#else
+#define DC_LOAD_XMTRX() ((void)0)
+#define DC_TRANSFORM_VERTEX(dest, src) \
+    TRANSFORM_VERTEX((br_vector4 *)(dest), (src), &scache.model_to_screen)
+#endif
+
+/* The transform-path measurement counters have been removed now that the
+ * profiling is done (they showed all vertex volume goes through the scalar
+ * paths, none through the previously-sh4zam'd Bounds function - which is why
+ * the pure transform functions below were converted to FTRV). Left as no-ops
+ * so the call sites need not be touched. */
+#define DC_XF_FAST()
+#define DC_XF_SCALAR()
+#else
+/* Non-Dreamcast: the pure transform functions below use these too, so define
+ * them as the plain scalar path (no XMTRX). */
+#define DC_LOAD_XMTRX() ((void)0)
+#define DC_TRANSFORM_VERTEX(dest, src) \
+    TRANSFORM_VERTEX((br_vector4 *)(dest), (src), &scache.model_to_screen)
+#define DC_XF_FAST()
+#define DC_XF_SCALAR()
 #endif
 
 /*
@@ -49,6 +82,7 @@ static void GEOMETRY_CALL Vertex_TransformProjectOutcodeBounds(struct br_geometr
 	/* Load the model-to-screen matrix into XMTRX once for the whole batch; the
 	 * per-vertex FTRV below reads it. Nothing in the loop body touches XMTRX. */
 	shz_xmtrx_load_4x4((const shz_mat4x4_t *)&scache.model_to_screen);
+	DC_XF_FAST();
 #endif
 
 	if (rend.block->vertex_components & CM_Q)
@@ -98,6 +132,8 @@ static void GEOMETRY_CALL Vertex_TransformProjectOutcode(struct br_geometry *sel
 {
 	int v;
 	brp_vertex *tvp = rend.temp_vertices;
+	DC_LOAD_XMTRX();
+	DC_XF_FAST();
 
 	if (rend.block->vertex_components & CM_Q)
 		for(v=0; v < rend.nvertices; v++, tvp++) {
@@ -105,7 +141,7 @@ static void GEOMETRY_CALL Vertex_TransformProjectOutcode(struct br_geometry *sel
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
 			OUTCODE_POINT(tvp->flags, (br_vector4 *)(tvp->comp+C_X));
 
 			if(!(tvp->flags & OUTCODES_ALL)) {
@@ -118,7 +154,7 @@ static void GEOMETRY_CALL Vertex_TransformProjectOutcode(struct br_geometry *sel
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
 			OUTCODE_POINT(tvp->flags, (br_vector4 *)(tvp->comp+C_X));
 
 			if(!(tvp->flags & OUTCODES_ALL)) {
@@ -136,6 +172,8 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBounds(struct br_geometry *s
 {
 	int v;
 	brp_vertex *tvp = rend.temp_vertices;
+	DC_LOAD_XMTRX();
+	DC_XF_FAST();
 
 	if (rend.block->vertex_components & CM_Q)
 		for(v=0; v < rend.nvertices; v++, tvp++) {
@@ -143,7 +181,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBounds(struct br_geometry *s
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
 			PROJECT_VERTEX_WRITE_Q(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 			UPDATE_BOUNDS(tvp);
 		}
@@ -153,7 +191,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBounds(struct br_geometry *s
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
 			PROJECT_VERTEX(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 			UPDATE_BOUNDS(tvp);
 		}
@@ -168,6 +206,8 @@ static void GEOMETRY_CALL Vertex_OS_TransformProject(struct br_geometry *self, s
 {
 	int v;
 	brp_vertex *tvp = rend.temp_vertices;
+	DC_LOAD_XMTRX();
+	DC_XF_FAST();
 
 	if (rend.block->vertex_components & CM_Q)
 		for(v=0; v < rend.nvertices; v++, tvp++) {
@@ -175,7 +215,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProject(struct br_geometry *self, s
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
 			PROJECT_VERTEX_WRITE_Q(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 		}
 	else
@@ -184,7 +224,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProject(struct br_geometry *self, s
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
 			PROJECT_VERTEX(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 		}
 }
@@ -202,6 +242,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBoundsSurf(struct br_geometr
 	br_vector2 *vp_map = rend.vertex_map;
 	br_vector3 *vp_n = rend.vertex_n;
 
+	DC_XF_SCALAR();
 	rend.prelit_colours = rend.vertex_colours;
 
 	if (rend.block->vertex_components & CM_Q)
@@ -249,6 +290,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectSurf(struct br_geometry *sel
 	br_vector2 *vp_map = rend.vertex_map;
 	br_vector3 *vp_n = rend.vertex_n;
 
+	DC_XF_SCALAR();
 	rend.prelit_colours = rend.vertex_colours;
 
 	if (rend.block->vertex_components & CM_Q)
@@ -294,6 +336,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBoundsGeom(struct br_geometr
 	br_vector2 *vp_map = rend.vertex_map;
 	br_vector3 *vp_n = rend.vertex_n;
 
+	DC_XF_SCALAR();
 	rend.prelit_colours = rend.vertex_colours;
 
 	if (rend.block->vertex_components & CM_Q)
@@ -341,6 +384,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectGeom(struct br_geometry *sel
 	br_vector2 *vp_map = rend.vertex_map;
 	br_vector3 *vp_n = rend.vertex_n;
 
+	DC_XF_SCALAR();
 	rend.prelit_colours = rend.vertex_colours;
 
 	if (rend.block->vertex_components & CM_Q)
@@ -383,6 +427,7 @@ static void GEOMETRY_CALL Vertex_OSV_TransformProjectBounds(struct br_geometry *
 {
 	int v;
 	brp_vertex *tvp = rend.temp_vertices;
+	DC_XF_SCALAR();
 
 	if (rend.block->vertex_components & CM_Q)
 		for(v=0; v < rend.nvertices; v++, tvp++) {
@@ -407,6 +452,7 @@ static void GEOMETRY_CALL Vertex_OSV_TransformProject(struct br_geometry *self, 
 {
 	int v;
 	brp_vertex *tvp = rend.temp_vertices;
+	DC_XF_SCALAR();
 
 	if (rend.block->vertex_components & CM_Q)
 		for(v=0; v < rend.nvertices; v++, tvp++) {
@@ -518,7 +564,7 @@ static void GEOMETRY_CALL Vertex_SurfaceComponentsTwoSidedGeom(struct br_geometr
 	br_vector3 rev_normal;
 	int v,i;
 
-	rend.prelit_colours = rend.vertex_colours;
+	DC_XF_SCALAR();
 
 	for(v=0; v < rend.nvertices; v++, vp_p++, vp_map++, vp_n++, tvp++) {
 		if(rend.vertex_counts[v] == 0)
