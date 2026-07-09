@@ -455,6 +455,15 @@ extern void DCPVR3D_AddTriTex(
     int texid, int category);
 extern int DCPVR3D_RegisterTexture(void *pixels, int w, int h, int stride);
 extern unsigned int DCPVR3D_PaletteColor(int idx);
+/* Fast triangle reservation (dc_pvr.c): returns 3 consecutive vertices to fill
+ * in place, or NULL if the frame's triangle buffer is full. Mirror of dc_pvr.c's
+ * tDC3D_vertex - keep the layouts in sync. */
+typedef struct {
+    float x, y, z;
+    float u, v;
+    unsigned int argb;
+} tDC3D_vertex_mirror;
+extern void *DCPVR3D_AllocTri(int texid, int category);
 /* Implemented in the pentprim driver (dc_pvr_texture.c) - reaches the texture
  * out of the opaque primitive state. *opaque reports PRIMF_OPAQUE_MAP. */
 extern void *DC_GetCurrentTexture(void *pstate, int *w, int *h, int *stride, int *opaque);
@@ -700,11 +709,19 @@ static void BR_ASM_CALL dc_triangle_fill(struct brp_block *block,
     extern int g_dc_in_decal_pass;
 #define DC_FEAT_DEDICATED_BIAS 1
     float zbias = (DC_FEAT_DEDICATED_BIAS && (g_dc_in_shadow_pass || g_dc_in_decal_pass)) ? 1.0005f : 1.0f;
-    DCPVR3D_AddTriTex(
-        v0->comp_f[C_SX], v0->comp_f[C_SY], zbias / wa, u0, v0v, c0,
-        v1->comp_f[C_SX], v1->comp_f[C_SY], zbias / wb, u1, v1v, c1,
-        v2->comp_f[C_SX], v2->comp_f[C_SY], zbias / wc, u2, v2v, c2,
-        texid, category);
+    /* Write the triangle straight into the frame buffer slot instead of
+     * passing 20 scalar arguments through AddTriTex (all via the stack on
+     * SH4) plus a second copy - this runs for every visible triangle. */
+    tDC3D_vertex_mirror *tv = (tDC3D_vertex_mirror *)DCPVR3D_AllocTri(texid, category);
+    if (tv == NULL) {
+        return;
+    }
+    tv[0].x = v0->comp_f[C_SX]; tv[0].y = v0->comp_f[C_SY]; tv[0].z = zbias / wa;
+    tv[0].u = u0; tv[0].v = v0v; tv[0].argb = c0;
+    tv[1].x = v1->comp_f[C_SX]; tv[1].y = v1->comp_f[C_SY]; tv[1].z = zbias / wb;
+    tv[1].u = u1; tv[1].v = v1v; tv[1].argb = c1;
+    tv[2].x = v2->comp_f[C_SX]; tv[2].y = v2->comp_f[C_SY]; tv[2].z = zbias / wc;
+    tv[2].u = u2; tv[2].v = v2v; tv[2].argb = c2;
 }
 #endif
 

@@ -242,7 +242,11 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBoundsSurf(struct br_geometr
 	br_vector2 *vp_map = rend.vertex_map;
 	br_vector3 *vp_n = rend.vertex_n;
 
-	DC_XF_SCALAR();
+	/* The surface fns called per vertex below are all scalar after the
+	 * DC lighting skip (UV map / unlit colour / alpha) and never touch
+	 * XMTRX, so the batch-loaded matrix survives the whole loop - same
+	 * pattern as the pure transform functions above. */
+	DC_LOAD_XMTRX();
 	rend.prelit_colours = rend.vertex_colours;
 
 	if (rend.block->vertex_components & CM_Q)
@@ -251,7 +255,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBoundsSurf(struct br_geometr
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p, &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p);
 			PROJECT_VERTEX_WRITE_Q(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 			UPDATE_BOUNDS(tvp);
 
@@ -266,7 +270,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBoundsSurf(struct br_geometr
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p, &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p);
 			PROJECT_VERTEX(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 			UPDATE_BOUNDS(tvp);
 
@@ -290,7 +294,11 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectSurf(struct br_geometry *sel
 	br_vector2 *vp_map = rend.vertex_map;
 	br_vector3 *vp_n = rend.vertex_n;
 
-	DC_XF_SCALAR();
+	/* The surface fns called per vertex below are all scalar after the
+	 * DC lighting skip (UV map / unlit colour / alpha) and never touch
+	 * XMTRX, so the batch-loaded matrix survives the whole loop - same
+	 * pattern as the pure transform functions above. */
+	DC_LOAD_XMTRX();
 	rend.prelit_colours = rend.vertex_colours;
 
 	if (rend.block->vertex_components & CM_Q)
@@ -299,7 +307,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectSurf(struct br_geometry *sel
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p, &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p);
 			PROJECT_VERTEX_WRITE_Q(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 
 			rend.current_index = v;
@@ -313,7 +321,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectSurf(struct br_geometry *sel
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p, &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p);
 			PROJECT_VERTEX(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 
 			rend.current_index = v;
@@ -336,7 +344,11 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBoundsGeom(struct br_geometr
 	br_vector2 *vp_map = rend.vertex_map;
 	br_vector3 *vp_n = rend.vertex_n;
 
-	DC_XF_SCALAR();
+	/* The surface fns called per vertex below are all scalar after the
+	 * DC lighting skip (UV map / unlit colour / alpha) and never touch
+	 * XMTRX, so the batch-loaded matrix survives the whole loop - same
+	 * pattern as the pure transform functions above. */
+	DC_LOAD_XMTRX();
 	rend.prelit_colours = rend.vertex_colours;
 
 	if (rend.block->vertex_components & CM_Q)
@@ -345,7 +357,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBoundsGeom(struct br_geometr
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p, &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p);
 			PROJECT_VERTEX_WRITE_Q(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 			UPDATE_BOUNDS(tvp);
 
@@ -360,7 +372,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectBoundsGeom(struct br_geometr
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p, &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p);
 			PROJECT_VERTEX(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 			UPDATE_BOUNDS(tvp);
 
@@ -384,7 +396,11 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectGeom(struct br_geometry *sel
 	br_vector2 *vp_map = rend.vertex_map;
 	br_vector3 *vp_n = rend.vertex_n;
 
-	DC_XF_SCALAR();
+	/* The surface fns called per vertex below are all scalar after the
+	 * DC lighting skip (UV map / unlit colour / alpha) and never touch
+	 * XMTRX, so the batch-loaded matrix survives the whole loop - same
+	 * pattern as the pure transform functions above. */
+	DC_LOAD_XMTRX();
 	rend.prelit_colours = rend.vertex_colours;
 
 	if (rend.block->vertex_components & CM_Q)
@@ -393,7 +409,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectGeom(struct br_geometry *sel
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p, &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p);
 			PROJECT_VERTEX_WRITE_Q(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 
 			rend.current_index = v;
@@ -407,7 +423,7 @@ static void GEOMETRY_CALL Vertex_OS_TransformProjectGeom(struct br_geometry *sel
 			if(rend.vertex_counts[v] == 0)
 				continue;
 
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p, &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),vp_p);
 			PROJECT_VERTEX(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 
 			rend.current_index = v;
@@ -452,16 +468,16 @@ static void GEOMETRY_CALL Vertex_OSV_TransformProject(struct br_geometry *self, 
 {
 	int v;
 	brp_vertex *tvp = rend.temp_vertices;
-	DC_XF_SCALAR();
+	DC_LOAD_XMTRX();
 
 	if (rend.block->vertex_components & CM_Q)
 		for(v=0; v < rend.nvertices; v++, tvp++) {
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
 			PROJECT_VERTEX_WRITE_Q(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 		}
 	else
 		for(v=0; v < rend.nvertices; v++, tvp++) {
-			TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v], &scache.model_to_screen);
+			DC_TRANSFORM_VERTEX((br_vector4 *)(tvp->comp+C_X),&rend.vertex_p[v]);
 			PROJECT_VERTEX(tvp,tvp->comp[C_X],tvp->comp[C_Y],tvp->comp[C_Z],tvp->comp[C_W]);
 		}
 }
