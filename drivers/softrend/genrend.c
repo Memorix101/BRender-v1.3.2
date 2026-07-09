@@ -35,7 +35,10 @@
  * (*Surf/*Geom, which call renderer->state.cache.vertex_fns[] per vertex)
  * are left scalar because arbitrary lighting code in the loop could clobber
  * XMTRX between the load and the FTRV. */
-#define DC_FEAT_SH4ZAM_XFORM 1
+// 0 for the hardware bisect: all prior validation was on Flycast; real
+// hardware reboots at the pre-race loading screen. XMTRX survival across the
+// transform loops under real IRQ timing is one of the suspects.
+#define DC_FEAT_SH4ZAM_XFORM 0
 
 #if DC_FEAT_SH4ZAM_XFORM
 /* Load the model-to-screen matrix into XMTRX once, before a transform loop. */
